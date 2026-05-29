@@ -1,0 +1,51 @@
+<% const hasMediaReport = typeof media.report_markdown === 'string' && media.report_markdown.trim(); %>
+<% const hasUnpublishedReport = (media.report_markdown || '') !== (media.published_report_markdown || ''); %>
+<div class="media-item report-media-item <%= media.is_deleted_draft ? 'is-draft-deleted' : '' %>" draggable="true" data-id="<%= media.id %>" data-name="<%= (media.original_name || '').toLowerCase() %>" data-kind="<%= media.isVideo ? 'video' : 'image' %>" data-has-report="<%= hasMediaReport ? '1' : '0' %>" data-is-published="<%= media.is_published ? '1' : '0' %>" data-is-draft-deleted="<%= media.is_deleted_draft ? '1' : '0' %>" data-published-order-index="<%= Number(media.published_order_index || 0) %>">
+    <div class="media-card-head">
+        <div class="media-card-title"><%= media.original_name %></div>
+        <div class="media-card-actions">
+            <button type="button" class="expand-media-btn">
+                <span class="expand-text-closed"><%= __('admin.collectionDetail.expandDescription') %></span>
+                <span class="expand-text-open"><%= __('admin.collectionDetail.collapseDescription') %></span>
+            </button>
+        </div>
+    </div>
+    <div class="media-card-preview">
+        <% if (media.isVideo) { %>
+            <video autoplay loop muted playsinline preload="metadata" src="/content/<%= collection.slug %>/content/images/large/<%= media.filename %>">
+            </video>
+        <% } else { %>
+            <img src="/content/<%= collection.slug %>/content/images/thumb/<%= media.filename %>" alt="<%= media.original_name %>">
+        <% } %>
+    </div>
+    <div class="media-card-meta">
+        <span class="badge <%= media.isVideo ? 'video' : 'image' %>"><%= media.isVideo ? __('admin.collectionDetail.video') : __('admin.collectionDetail.image') %></span>
+        <% if (hasMediaReport) { %>
+            <span class="badge reported" data-role="media-report-badge"><%= __('admin.collectionDetail.reported') %></span>
+        <% } else { %>
+            <span class="badge" data-role="media-report-badge"><%= __('admin.collectionDetail.noDescription') %></span>
+        <% } %>
+        <% if (!media.is_published) { %>
+            <span class="badge unpublished" data-role="unpublished-badge"><%= __('admin.collectionDetail.mediaUnpublished') %></span>
+        <% } else if (hasUnpublishedReport) { %>
+            <span class="badge unpublished" data-role="unpublished-badge"><%= __('admin.collectionDetail.reportUnpublished') %></span>
+        <% } %>
+        <% if (media.is_deleted_draft) { %>
+            <span class="badge pending-delete" data-role="draft-deleted-badge"><%= __('admin.collectionDetail.pendingDelete') %></span>
+        <% } %>
+    </div>
+    <div class="media-card-details">
+        <div class="media-card-detail-meta">
+            <span><%= __('admin.collectionCard.id') %><%= media.id %></span>
+            <span><%= __('admin.collectionDetail.fileName') %><%= media.filename %></span>
+        </div>
+        <form class="report-media-form js-async-form" action="/admin/media/update-report/<%= media.id %>" method="POST" data-published-value="<%= media.published_report_markdown || '' %>">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <textarea name="report_markdown" placeholder="<%= __('admin.collectionDetail.reportPlaceholder') %>"><%= media.report_markdown || '' %></textarea>
+            <div class="report-media-actions">
+                <button type="submit" class="btn-primary"><%= __('admin.collectionDetail.saveText') %></button>
+                <span class="autosave-status" data-role="autosave-status" aria-live="polite"></span>
+            </div>
+        </form>
+    </div>
+</div>

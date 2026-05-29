@@ -1,0 +1,14 @@
+<div id="contact" style="display: flex; flex-direction: column; width: 200px;">
+  <% if (!shouldHideInfo) { %>
+    <p class="textColor" style="margin:0; text-align:left;"><%= siteConfig.fullSignature %></p>
+    <% siteConfig.socialLinks.forEach(function(link) { %>
+      <a href="<%= link.url %>" style="margin-top: 5px;"> <p class="textColor"><%= link.label %></p></a>
+    <% }); %>
+  <% } else if (shouldShowHiddenCredit) { %>
+    <span class="footer-simple-credit footer-compact-meta"><%= siteConfig.shortSignature %></span>
+  <% } %>
+  <% if (siteConfig.icpNumber) { %>
+    <a class="footer-compact-meta" href="<%= siteConfig.icpLink %>" target="_blank" rel="noreferrer" style="margin-top: 5px; white-space: nowrap;"><%= siteConfig.icpNumber %></a>
+  <% } %>
+</div>
+<div class="clear"></div>

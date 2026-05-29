@@ -1,0 +1,16 @@
+<div class="section report-section">
+    <div class="section-header">
+        <div>
+            <h2><%= __('admin.collectionDetail.collectionReport') %></h2>
+            <p class="section-subtitle"><%= __('admin.collectionDetail.collectionReportHint') %></p>
+        </div>
+    </div>
+    <form action="/admin/collections/update-report/<%= collection.id %>" method="POST" id="collection-report-form" class="js-async-form" data-published-value="<%= collection.published_report_markdown || '' %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <textarea name="report_markdown" placeholder="<%= __('admin.collectionDetail.reportPlaceholder') %>"><%= collection.report_markdown || '' %></textarea>
+        <div class="report-media-actions" style="margin-top: 0.75rem;">
+            <button type="submit" class="btn-primary"><%= __('admin.collectionDetail.saveText') %></button>
+            <span class="autosave-status" data-role="autosave-status" aria-live="polite"></span>
+        </div>
+    </form>
+</div>

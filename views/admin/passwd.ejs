@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= __('admin.login.resetPassword') %></title>
+    <link rel="stylesheet" href="/resources/css/master.css">
+    <link rel="stylesheet" href="/content/custom.css">
+    <link rel="stylesheet" href="/resources/admin-passwd.css">
+</head>
+<body>
+
+<div id="wrapper_thumb">
+    <div id="model.nonCSS.idplateEnabled">
+        <div class="logo"> <a href="/"><%= typeof siteConfig !== 'undefined' && siteConfig ? siteConfig.siteName : 'Admin' %></a> </div>
+    </div>
+
+    <div id="sitetitle">
+        <h1 class="textColor"></h1>
+    </div>
+
+    <div class="login-form">
+        <% if (locals.error) { %>
+            <p class="error"><%= error %></p>
+        <% } %>
+
+        <% if (locals.success) { %>
+            <p class="success"><%= success %></p>
+            <div class="login-actions">
+                <a href="/admin/login" class="back-link-btn"><%= __('admin.login.goToLogin') %></a>
+            </div>
+        <% } else { %>
+            <form action="/admin/passwd" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="field">
+                    <label for="username"><%= __('admin.login.username') %></label>
+                    <input id="username" type="text" name="username" required>
+                </div>
+                <div class="field">
+                    <label for="resetKey"><%= __('admin.login.resetKey') %></label>
+                    <input id="resetKey" type="password" name="resetKey" required>
+                </div>
+                <div class="field">
+                    <label for="newPassword"><%= __('admin.login.newPassword') %></label>
+                    <input id="newPassword" type="password" name="newPassword" required>
+                </div>
+                <div class="login-actions">
+                    <button type="submit"><%= __('admin.login.resetPassword') %></button>
+                </div>
+            </form>
+            <div class="login-note">
+                <a href="/admin/login"><%= __('admin.login.backToLogin') %></a>
+            </div>
+        <% } %>
+    </div>
+</div>
+</body>
+</html>

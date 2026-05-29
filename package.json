@@ -1,0 +1,46 @@
+{
+  "name": "art-media-publishing-site",
+  "version": "2.8.0",
+  "description": "Art portfolio site with admin publishing workflow, image processing, and video transcoding.",
+  "private": false,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
+    "setup": "node setup.js",
+    "check": "node --check server.js && node --check db.js && node --check config.js && node --check videoProcessor.js && node --check routes/admin.js && node --check routes/public.js && node --check lib/public-site.js && node --check lib/asset-utils.js && node --check lib/server-lifecycle.js && node --check lib/session-store.js",
+    "test": "node --test test/*.test.js",
+    "test:ci": "npm run check && npm test"
+  },
+  "keywords": [
+    "art",
+    "portfolio",
+    "express",
+    "sqlite",
+    "ejs"
+  ],
+  "author": "Jhen Tsan-Yan",
+  "license": "GPL-3.0",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.9.0",
+    "dotenv": "^17.4.2",
+    "ejs": "^5.0.2",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "ffmpeg-static": "^5.2.0",
+    "fs-extra": "^11.3.4",
+    "helmet": "^8.1.0",
+    "i18n": "^0.15.3",
+    "marked": "^18.0.3",
+    "multer": "^2.1.1",
+    "sharp": "^0.34.3"
+  },
+  "optionalDependencies": {
+    "@ffprobe-installer/ffprobe": "^2.1.2"
+  }
+}

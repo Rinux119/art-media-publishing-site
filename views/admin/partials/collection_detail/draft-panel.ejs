@@ -1,0 +1,13 @@
+<div class="draft-panel">
+    <div class="controls">
+        <div>
+            <h2><%= __('admin.collectionDetail.draftUpdates') %></h2>
+            <p class="section-subtitle"><%= __('admin.collectionDetail.draftUpdatesHint') %></p>
+            <p style="margin-top: 6px;"><span id="draft-indicator" class="draft-indicator <%= hasPendingDraftChanges ? 'has-pending' : '' %>"><%= hasPendingDraftChanges ? __('admin.collectionDetail.hasPendingChanges') : __('admin.collectionDetail.noPendingChanges') %></span></p>
+        </div>
+        <div class="toolbar-row">
+            <span id="publish-status" class="autosave-status" aria-live="polite"></span>
+            <button id="publish-updates-button" type="button" class="btn-primary"><%= __('admin.collectionDetail.publishUpdates') %></button>
+        </div>
+    </div>
+</div>

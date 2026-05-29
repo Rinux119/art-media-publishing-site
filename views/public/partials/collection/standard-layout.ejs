@@ -1,0 +1,11 @@
+<div class="report-layout">
+    <div class="single-layout collection-media-block">
+      <div id="wall-grid" class="<%= gridClass %>" data-display-type="<%= resolvedDisplayType %>" data-collection-slug="<%= collection.slug %>"></div>
+    </div>
+    <% if (reportHtml) { %>
+      <div class="report-text"><%- reportHtml %></div>
+    <% } else { %>
+      <div class="report-empty"><%= __('public.noReport') %></div>
+    <% } %>
+</div>
+<div id="wall-loading" class="wall-loading" data-batch-size="<%= wallBatchSize || 20 %>" data-all-loaded-text="<%= __('public.allLoaded') %>"><%= __('public.loadingMore') %></div>

@@ -1,0 +1,37 @@
+  html,
+  body {
+    min-height: 100%;
+  }
+  .home-single img {
+    display: block;
+    margin: 0 auto;
+    width: 800px;
+    max-width: 100%;
+    height: auto;
+  }
+  .home-diptych {
+    width: 800px;
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    gap: 35px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .home-diptych img {
+    width: calc((100% - 35px) / 2);
+    height: auto;
+    display: block;
+    background: #000;
+  }
+  .home-video video {
+    display: block;
+    margin: 0 auto;
+    width: 1080px;
+    max-width: 100%;
+    height: auto;
+    background: #000;
+  }
+  #wrapper_thumb {
+    position: relative;
+  }

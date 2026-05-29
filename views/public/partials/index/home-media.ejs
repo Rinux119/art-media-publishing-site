@@ -1,0 +1,23 @@
+<div id="content" style="visibility: visible; text-align: center; clear: both; width: 100%;">
+  <% if (indexDisplayType === 'video' && (indexImageLeft || indexImage)) { %>
+    <div class="home-video">
+      <video autoplay loop muted playsinline preload="metadata" src="<%= indexImageLeft || indexImage %>">
+      </video>
+    </div>
+  <% } else if (indexDisplayType === 'diptych' && indexImageLeft && indexImageRight) { %>
+    <div class="home-diptych">
+      <img src="<%= indexImageLeft %>">
+      <img src="<%= indexImageRight %>">
+    </div>
+  <% } else { %>
+    <div class="home-single">
+      <img src="<%= indexImageLeft || indexImage %>">
+    </div>
+  <% } %>
+  <br>
+  <br>
+  <br>
+  <div id="nav">
+
+  </div>
+</div>

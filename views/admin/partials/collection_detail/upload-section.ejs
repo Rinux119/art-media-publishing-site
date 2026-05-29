@@ -1,0 +1,27 @@
+<div class="section upload-section">
+    <div class="section-header">
+        <div>
+            <h2><%= __('admin.collectionDetail.uploadMedia') %></h2>
+            <p class="section-subtitle"><%= __('admin.collectionDetail.uploadMediaHint') %></p>
+        </div>
+    </div>
+    <div class="panel-soft">
+        <form id="media-upload-form" action="/admin/collections/<%= collection.id %>/media/upload" method="POST" enctype="multipart/form-data" class="toolbar-row">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input id="media-upload-input" type="file" name="media" accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.wmv,.flv" multiple required>
+            <button type="submit" class="btn-primary"><%= __('admin.collectionDetail.startUpload') %></button>
+        </form>
+    </div>
+    <div id="upload-progress" style="display:none; margin-top: 1rem; text-align:left;">
+        <div id="upload-progress-text" style="font-size:12px;color:#666;margin-bottom:4px;"><%= __('admin.collectionDetail.preparingUpload') %></div>
+        <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;">
+            <div id="upload-progress-bar" style="width:0%;height:100%;background:#333;"></div>
+        </div>
+    </div>
+    <div id="processing-progress" style="display:none; margin-top: 0.75rem; text-align:left;">
+        <div id="processing-progress-text" style="font-size:12px;color:#666;margin-bottom:4px;"><%= __('admin.collectionDetail.waitingProcessing') %></div>
+        <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;">
+            <div id="processing-progress-bar" style="width:0%;height:100%;background:#333;"></div>
+        </div>
+    </div>
+</div>

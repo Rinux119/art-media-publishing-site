@@ -1,0 +1,54 @@
+<div class="section">
+    <div class="section-header">
+        <div>
+            <h2><%= __('admin.dashboard.indexImageManagement') %></h2>
+            <p class="section-subtitle"><%= __('admin.dashboard.currentStyle') %><%= indexDisplayType === 'diptych' ? __('admin.displayType.diptych') : (indexDisplayType === 'video' ? __('admin.displayType.video') : __('admin.displayType.single')) %></p>
+        </div>
+    </div>
+    <div id="index-current-thumbs" class="index-thumbs" data-diptych="<%= indexDisplayType === 'diptych' ? '1' : '0' %>">
+        <div class="index-thumb" draggable="<%= indexDisplayType === 'diptych' && indexImageRight ? 'true' : 'false' %>" data-slot="left">
+            <% if (indexDisplayType === 'video') { %>
+                <video autoplay loop muted playsinline preload="metadata" style="width:120px; height:auto; display:block; background:#000;" src="<%= indexImageLeft || indexImage %>">
+                </video>
+            <% } else { %>
+                <img src="<%= indexImageLeft || indexImage %>" style="width:120px; height:auto; display:block; background:#000;">
+            <% } %>
+        </div>
+        <% if (indexDisplayType === 'diptych' && indexImageRight) { %>
+            <div class="index-thumb" draggable="true" data-slot="right">
+                <img src="<%= indexImageRight %>" style="width:120px; height:auto; display:block; background:#000;">
+            </div>
+        <% } %>
+    </div>
+    <% if (indexDisplayType === 'diptych' && indexImageRight) { %>
+        <p style="margin: 0 0 1rem 0;"><small><%= __('admin.dashboard.swapDragHint') %></small></p>
+    <% } else { %>
+        <div style="height: 1rem;"></div>
+    <% } %>
+    <div class="panel-soft stack-gap">
+        <form id="index-image-form" action="/admin/update-index-image" method="POST" enctype="multipart/form-data" class="toolbar-row">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <select id="index-display-type" name="index_display_type" required>
+                <option value="single" <%= (indexDisplayType || 'single') === 'single' ? 'selected' : '' %>><%= __('admin.displayType.single') %></option>
+                <option value="diptych" <%= indexDisplayType === 'diptych' ? 'selected' : '' %>><%= __('admin.displayType.diptych') %></option>
+                <option value="video" <%= indexDisplayType === 'video' ? 'selected' : '' %>><%= __('admin.displayType.video') %></option>
+            </select>
+            <input id="index-image-input" type="file" name="indexImages" accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.wmv,.flv" multiple required>
+            <input id="index-image-confirmed" type="hidden" name="confirmed" value="0">
+            <button type="submit" class="btn-primary"><%= __('admin.dashboard.changeImage') %></button>
+        </form>
+        <div id="index-upload-preview" style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;"></div>
+    </div>
+    <div id="index-upload-progress" style="display:none; margin-top: 0.75rem; text-align:left;">
+        <div id="index-upload-progress-text" style="font-size:12px;color:#666;margin-bottom:4px;"><%= __('admin.collectionDetail.preparingUpload') %></div>
+        <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;">
+            <div id="index-upload-progress-bar" style="width:0%;height:100%;background:#333;"></div>
+        </div>
+    </div>
+    <div id="index-processing-progress" style="display:none; margin-top: 0.75rem; text-align:left;">
+        <div id="index-processing-progress-text" style="font-size:12px;color:#666;margin-bottom:4px;"><%= __('admin.collectionDetail.waitingProcessing') %></div>
+        <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;">
+            <div id="index-processing-progress-bar" style="width:0%;height:100%;background:#333;"></div>
+        </div>
+    </div>
+</div>

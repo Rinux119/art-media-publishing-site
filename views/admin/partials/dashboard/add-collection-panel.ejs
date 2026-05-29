@@ -1,0 +1,17 @@
+<div class="panel-soft" style="margin-top: 1.25rem;">
+    <h3><%= __('admin.collectionCard.addNewCollection') %></h3>
+    <form action="/admin/collections/add" method="POST" class="add-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="text" name="name" placeholder="<%= __('admin.collectionCard.collectionNamePlaceholder') %>" required>
+        <input type="text" name="slug" placeholder="<%= __('admin.collectionCard.slugPlaceholder') %>" required>
+        <select id="display-type-select" name="display_type" required>
+            <option value="single"><%= __('admin.displayType.single') %></option>
+            <option value="diptych"><%= __('admin.displayType.diptych') %></option>
+            <option value="wall"><%= __('admin.displayType.wall') %></option>
+            <option value="report"><%= __('admin.displayType.report') %></option>
+        </select>
+        <input id="display-type-hidden" type="hidden" name="displayType" value="single">
+        <button type="submit" class="btn-primary"><%= __('admin.collectionCard.add') %></button>
+    </form>
+    <p style="margin: 0.85rem 0 0; color: #666;"><small><%= __('admin.collectionCard.newCollectionHint') %></small></p>
+</div>

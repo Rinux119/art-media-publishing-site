@@ -1,0 +1,98 @@
+<div
+    class="item collection-card"
+    draggable="true"
+    data-id="<%= col.id %>"
+    data-name="<%= (col.name || '').toLowerCase() %>"
+    data-slug="<%= (col.slug || '').toLowerCase() %>"
+    data-type="<%= col.display_type || 'single' %>"
+    data-hidden-entry="<%= col.is_hidden ? '1' : '0' %>"
+    data-hidden-info="<%= col.hide_info ? '1' : '0' %>"
+    data-show-credit="<%= col.show_credit ? '1' : '0' %>"
+    data-access-blocked="<%= col.access_blocked ? '1' : '0' %>"
+    data-has-pending-changes="<%= col.has_pending_draft_changes ? '1' : '0' %>"
+>
+    <div class="collection-card-head">
+        <div class="collection-title" data-role="collection-title"><%= col.name %></div>
+        <div class="collection-statuses" data-role="collection-statuses">
+            <% if (col.has_pending_draft_changes) { %>
+                <span class="badge has-pending-changes"><%= __('admin.collectionCard.unpublishedUpdate') %></span>
+            <% } %>
+            <% if (col.is_hidden) { %>
+                <span class="badge hidden-entry"><%= __('admin.collectionCard.hiddenEntry') %></span>
+            <% } %>
+            <% if (col.hide_info) { %>
+                <span class="badge hidden-info"><%= __('admin.collectionCard.hiddenInfo') %></span>
+            <% } %>
+            <% if (col.hide_info && !col.show_credit) { %>
+                <span class="badge hidden-credit"><%= __('admin.collectionCard.hiddenCredit') %></span>
+            <% } %>
+            <% if (col.access_blocked) { %>
+                <span class="badge access-blocked"><%= __('admin.collectionCard.accessBlocked') %></span>
+            <% } %>
+        </div>
+    </div>
+    <div class="collection-summary-actions">
+        <div class="action-group">
+            <button type="button" class="collection-toggle-btn" aria-expanded="false">
+                <span class="collection-expand-text-closed"><%= __('admin.collectionCard.expandMore') %></span>
+                <span class="collection-expand-text-open"><%= __('admin.collectionCard.collapseMore') %></span>
+            </button>
+        </div>
+    </div>
+    <div class="collection-details">
+        <div class="collection-detail-top">
+            <div class="collection-meta">
+                <span><%= __('admin.collectionCard.id') %><%= col.id %></span>
+                <span>Slug：<%= col.slug %></span>
+                <span data-role="collection-type-label"><%= __('admin.collectionCard.type') %><%= col.display_type || 'single' %></span>
+            </div>
+        </div>
+        <div class="collection-actions">
+            <div class="action-group">
+                <a href="/admin/collections/<%= col.id %>" class="btn-link"><%= __('admin.collectionCard.mediaManagement') %></a>
+                <form action="/admin/collections/toggle-hide-info/<%= col.id %>" method="POST" class="inline-form js-async-form" data-async-kind="toggle-hide-info">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" data-role="toggle-hide-info-button"><%= col.hide_info ? __('admin.collectionCard.showInfo') : __('admin.collectionCard.hideInfo') %></button>
+                </form>
+                <form action="/admin/collections/toggle-show-credit/<%= col.id %>" method="POST" class="inline-form js-async-form" data-async-kind="toggle-show-credit" data-role="toggle-show-credit-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button
+                        type="submit"
+                        data-role="toggle-show-credit-button"
+                        title="<%= __('admin.collectionCard.toggleCreditHint') %>"
+                    ><%= col.show_credit ? __('admin.collectionCard.hideCredit') : __('admin.collectionCard.showCredit') %></button>
+                </form>
+                <form action="/admin/collections/toggle-hidden/<%= col.id %>" method="POST" class="inline-form js-async-form" data-async-kind="toggle-hidden">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" data-role="toggle-hidden-button"><%= col.is_hidden ? __('admin.collectionCard.showEntry') : __('admin.collectionCard.hideEntry') %></button>
+                </form>
+                <form action="/admin/collections/toggle-access-blocked/<%= col.id %>" method="POST" class="inline-form js-async-form" data-async-kind="toggle-access-blocked" data-role="toggle-access-blocked-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" data-role="toggle-access-blocked-button"><%= col.access_blocked ? __('admin.collectionCard.allowAccess') : __('admin.collectionCard.blockAccess') %></button>
+                </form>
+            </div>
+            <div class="action-group action-group-settings">
+                <form action="/admin/collections/rename/<%= col.id %>" method="POST" class="inline-form js-async-form" data-async-kind="rename">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="text" name="name" value="<%= col.name %>" aria-label="<%= __('admin.collectionCard.collectionName') %>" required>
+                    <button type="submit"><%= __('admin.collectionCard.rename') %></button>
+                </form>
+                <form action="/admin/collections/update-type/<%= col.id %>" method="POST" class="inline-form js-async-form" data-async-kind="update-type">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <select name="display_type" required>
+                        <option value="single" <%= (col.display_type || 'single') === 'single' ? 'selected' : '' %>><%= __('admin.displayType.single') %></option>
+                        <option value="diptych" <%= col.display_type === 'diptych' ? 'selected' : '' %>><%= __('admin.displayType.diptych') %></option>
+                        <option value="wall" <%= col.display_type === 'wall' ? 'selected' : '' %>><%= __('admin.displayType.wall') %></option>
+                        <option value="report" <%= col.display_type === 'report' ? 'selected' : '' %>><%= __('admin.displayType.report') %></option>
+                    </select>
+                    <button type="submit"><%= __('admin.collectionCard.saveType') %></button>
+                </form>
+                <form class="delete-collection-form inline-form" action="/admin/collections/delete/<%= col.id %>" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="confirmed" value="0">
+                    <button type="submit" class="btn-delete delete-collection-btn"><%= __('admin.collectionCard.delete') %></button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

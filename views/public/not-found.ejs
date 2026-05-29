@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Not Found</title>
+<link rel="stylesheet" type="text/css" media="screen" title="Custom Settings" href="<%= assetUrl('/content/custom.css') %>" >
+<link rel="stylesheet" type="text/css" media="screen" title="Custom Settings" href="<%= assetUrl('/resources/css/master.css') %>" >
+
+<script type="text/javascript">
+window.AgMode = "publish";
+cellRolloverColor="#A1A1A1";
+cellColor="#949494";
+</script>
+<script type="text/javascript" src="<%= assetUrl('/resources/js/live_update.js') %>">
+</script>
+</head>
+
+<body>
+
+<div id="wrapper_thumb">
+  <div id="model.nonCSS.idplateEnabled">
+    <div class="logo"> <a href="/"><%= siteConfig.siteName %></a> </div>
+  </div>
+
+  <div id="sitetitle">
+    <h1 class="textColor"></h1>
+  </div>
+  <div id="collectionHeader">
+    <h1 class="textColor">
+    <% collections.forEach(function(col) { %>
+      <a style="text-decoration:none;" href="/<%= col.slug %>" id="<%= col.slug %>"><%= col.name %></a>&ensp;
+    <% }); %>
+    </h1>
+  </div>
+
+  <div id="content" style="visibility: visible; text-align: center; clear: both; width: 100%;">
+    <div class="not-found-message">
+      <p class="not-found-code">404</p>
+      <p class="not-found-text">Collection not found</p>
+    </div>
+  </div>
+
+  <div class="clear"></div>
+
+  <div style="border-bottom: 1px dotted #7F7F7F; margin: 10px 0;"></div>
+
+  <div id="contact" style="display: flex; flex-direction: column; width: 200px;">
+    <p class="textColor" style="margin:0; text-align:left;"><%= siteConfig.fullSignature %></p>
+    <% siteConfig.socialLinks.forEach(function(link) { %>
+      <a href="<%= link.url %>" style="margin-top: 5px;"> <p class="textColor" id="metadata.contactInfo.value"><%= link.label %></p></a>
+    <% }); %>
+    <% if (siteConfig.icpNumber) { %>
+      <a href="<%= siteConfig.icpLink %>" target="_blank" style="margin-top: 5px; white-space: nowrap;"><%= siteConfig.icpNumber %></a>
+    <% } %>
+  </div>
+  <div class="clear"></div>
+</div>
+
+<style>
+  .not-found-message {
+    padding: 80px 0 100px;
+  }
+  .not-found-code {
+    font-size: 72px;
+    font-weight: 200;
+    letter-spacing: 0.15em;
+    color: #7f7f7f;
+    margin: 0 0 12px;
+    line-height: 1;
+  }
+  .not-found-text {
+    font-size: 14px;
+    letter-spacing: 0.3em;
+    color: #949494;
+    margin: 0;
+  }
+</style>
+</body>
+</html>

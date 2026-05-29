@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title><%= collection.name %></title>
+<link rel="stylesheet" type="text/css" media="screen" title="Custom Settings" href="<%= assetUrl('/content/custom.css') %>" >
+<link rel="stylesheet" type="text/css" media="screen" title="Custom Settings" href="<%= assetUrl('/resources/css/master.css') %>" >
+
+<script type="text/javascript">
+window.AgMode = "publish";
+cellRolloverColor="#A1A1A1";
+cellColor="#949494";
+</script>
+<script type="text/javascript" src="<%= assetUrl('/resources/js/live_update.js') %>"></script>
+<style>
+  .minimal-video {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    background: #000;
+    border: 0;
+    outline: none;
+  }
+  .diptych-large {
+    width: min(1500px, 100%);
+    margin: 0 auto;
+    display: flex;
+    gap: 35px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .diptych-large .media-item {
+    width: calc((100% - 35px) / 2);
+    background: #000;
+  }
+  .diptych-large img,
+  .diptych-large video {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    background: #000;
+  }
+  .detail-large-layout {
+    width: min(1500px, 100%);
+    margin: 0 auto;
+  }
+  .detail-large-hero {
+    width: 100%;
+    margin: 0 auto 36px;
+  }
+  .detail-large-hero .media-item {
+    width: 100%;
+    background: transparent;
+  }
+  .detail-large-hero .media-item img,
+  .detail-large-hero .media-item video {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    max-height: 88vh;
+    background: transparent;
+  }
+  .detail-large-text {
+    width: min(900px, 100%);
+    margin: 0 auto;
+    color: #222;
+    line-height: 1.9;
+    font-size: 16px;
+    text-align: left;
+  }
+  .detail-large-text h1,
+  .detail-large-text h2,
+  .detail-large-text h3,
+  .detail-large-text h4,
+  .detail-large-text h5,
+  .detail-large-text h6 {
+    color: #111;
+    line-height: 1.4;
+    margin: 1.6em 0 0.7em;
+  }
+  .detail-large-text h1 { font-size: 1.8em; }
+  .detail-large-text h2 { font-size: 1.5em; }
+  .detail-large-text h3 { font-size: 1.3em; }
+  .detail-large-text h4 { font-size: 1.15em; }
+  .detail-large-text h5 { font-size: 1em; }
+  .detail-large-text h6 { font-size: 0.9em; }
+  .detail-large-text p,
+  .detail-large-text ul,
+  .detail-large-text ol,
+  .detail-large-text blockquote,
+  .detail-large-text pre {
+    margin: 0 0 1em;
+    color: inherit;
+  }
+  .detail-large-text img {
+    max-width: 100%;
+    height: auto;
+  }
+  .detail-large-text a {
+    color: inherit;
+    text-decoration: underline;
+  }
+</style>
+
+<!--[if lt IE 7.]> <script defer type="text/javascript" src="<%= assetUrl('/resources/js/pngfix.js') %>"></script> <![endif]-->
+<!--[if gt IE 6]> <link rel="stylesheet" href="<%= assetUrl('/resources/css/ie7.css') %>"></link> <![endif]-->
+<!--[if lt IE 7.]> <link rel="stylesheet" href="<%= assetUrl('/resources/css/ie6.css') %>"></link> <![endif]-->
+</head>
+
+<body>
+
+<div id="wrapper_large">
+    <% const shouldHideInfo = !!(collection && collection.hide_info); %>
+    <% const shouldShowHiddenCredit = shouldHideInfo && !!(collection && collection.show_credit); %>
+    <% if (!shouldHideInfo) { %>
+      <div id="model.nonCSS.idplateEnabled">
+        <div class="logo"> <a href="/"><%= siteConfig.siteName %></a> </div>
+      </div>
+    <% } %>
+
+  <div id="sitetitle">
+    <h1 class="textColor"></h1>
+  </div>
+  <% if (!shouldHideInfo) { %>
+    <div id="collectionHeader">
+      <h1 class="textColor">
+      <% collections.forEach(function(col) { %>
+	      <a style="text-decoration:none;" href="/<%= col.slug %>" id="<%= col.slug %>"><%= col.name %></a>&ensp;
+      <% }); %>
+      </h1>
+    </div>
+  <% } %>
+
+  <div id="stage2">
+    <div id="previewFull" class="borderTopLeft borderBottomRight">
+      <div style="text-align:center; width: 100%; margin-top: 10px; margin-bottom: 10px;">
+          <% if (displayType === 'diptych') { %>
+            <div class="detail-large-layout">
+              <div class="diptych-large">
+                <% mediaItems.forEach(function(item) { %>
+                  <div class="media-item">
+                    <% if (item.isVideo) { %>
+                      <video autoplay loop muted playsinline preload="auto" src="<%= item.mediaUrl %>">
+                      </video>
+                    <% } else { %>
+                      <a href="<%= nextUrl ? nextUrl : '/' + collection.slug %>" style="display: block;">
+                        <img src="<%= item.mediaUrl %>" alt="<%= collection.name %>">
+                      </a>
+                    <% } %>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          <% } else if (displayType === 'report') { %>
+            <% const item = (mediaItems && mediaItems.length) ? mediaItems[0] : null; %>
+            <div class="detail-large-layout">
+              <% if (item) { %>
+                <div class="detail-large-hero">
+                  <div class="media-item">
+                    <% if (item.isVideo) { %>
+                      <video autoplay loop muted playsinline preload="auto" src="<%= item.mediaUrl %>">
+                      </video>
+                    <% } else { %>
+                      <img src="<%= item.mediaUrl %>" alt="<%= collection.name %>">
+                    <% } %>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          <% } else { %>
+            <% const item = (mediaItems && mediaItems.length) ? mediaItems[0] : null; %>
+            <% if (item && item.isVideo) { %>
+              <video class="minimal-video" autoplay loop muted playsinline preload="auto" src="<%= item.mediaUrl %>">
+              </video>
+            <% } else if (item) { %>
+              <a href="<%= nextUrl ? nextUrl : '/' + collection.slug %>">
+                <img src="<%= item.mediaUrl %>"
+                    style="display: block; margin: 0 auto; max-width: 100%; height: auto;"
+                    id="previewImage"
+                    alt="<%= collection.name %>">
+              </a>
+            <% } %>
+          <% } %>
+      </div>
+      <div class="detail-large-text">
+        <% if (reportHtml) { %>
+          <%- reportHtml %>
+        <% } else { %>
+          <p><%= __('public.noReport') %></p>
+        <% } %>
+      </div>
+      <div style="clear:both;"></div>
+    </div>
+  </div>
+  <div class="clear"></div>
+
+  <div class="pagination">
+    <ul>
+      <% if (prevUrl) { %>
+        <li class="previous textColor"> <a class="paginationLinks" href="<%= prevUrl %>"><%= __('public.prevPage') %></a> </li>
+      <% } else { %>
+        <li class="previous textColor"> <%= __('public.prevPage') %> </li>
+      <% } %>
+
+      <% if (nextUrl) { %>
+        <li class="next textColor"> <a class="paginationLinks" href="<%= nextUrl %>"><%= __('public.nextPage') %></a> </li>
+      <% } else { %>
+        <li class="next textColor"> <%= __('public.nextPage') %> </li>
+      <% } %>
+    </ul>
+  </div>
+
+  <div id="contact" style="display: flex; flex-direction: column; width: 200px;">
+    <% if (!shouldHideInfo) { %>
+      <p class="textColor" style="margin:0; text-align:left;"><%= siteConfig.fullSignature %></p>
+      <% siteConfig.socialLinks.forEach(function(link) { %>
+        <a href="<%= link.url %>" style="margin-top: 5px;"> <p class="textColor"><%= link.label %></p></a>
+      <% }); %>
+    <% } else if (shouldShowHiddenCredit) { %>
+      <span class="footer-simple-credit footer-compact-meta"><%= siteConfig.shortSignature %></span>
+    <% } %>
+    <% if (siteConfig.icpNumber) { %>
+      <a class="footer-compact-meta" href="<%= siteConfig.icpLink %>" target="_blank" rel="noreferrer" style="margin-top: 5px; white-space: nowrap;"><%= siteConfig.icpNumber %></a>
+    <% } %>
+  </div>
+  <div class="clear"></div>
+</div>
+</body>
+</html>

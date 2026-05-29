@@ -1,0 +1,18 @@
+<% if (!shouldHideInfo) { %>
+  <div id="model.nonCSS.idplateEnabled">
+    <div class="logo"> <a href="/"><%= siteConfig.siteName %></a> </div>
+  </div>
+<% } %>
+
+<div id="sitetitle">
+  <h1 class="textColor"></h1>
+</div>
+<% if (!shouldHideInfo) { %>
+  <div id="collectionHeader">
+    <h1 class="textColor">
+    <% collections.forEach(function(col) { %>
+      <a style="text-decoration:none;" href="/<%= col.slug %>" id="<%= col.slug %>"><%= col.name %></a>&ensp;
+    <% }); %>
+    </h1>
+  </div>
+<% } %>

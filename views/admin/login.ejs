@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= __('admin.login.title') %></title>
+    <link rel="stylesheet" href="/resources/css/master.css">
+    <link rel="stylesheet" href="/content/custom.css">
+    <link rel="stylesheet" href="/resources/admin-login.css">
+</head>
+<body>
+
+<div id="wrapper_thumb">
+    <div id="model.nonCSS.idplateEnabled">
+        <div class="logo"> <a href="/"><%= siteConfig.siteName %></a> </div>
+    </div>
+
+    <div id="sitetitle">
+        <h1 class="textColor"></h1>
+    </div>
+
+    <div class="login-form">
+        <% if (locals.error) { %>
+            <p class="error"><%= error %></p>
+        <% } %>
+        <form action="/admin/login" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="field">
+                <label for="username"><%= __('admin.login.username') %></label>
+                <input id="username" type="text" name="username" required>
+            </div>
+            <div class="field">
+                <label for="password"><%= __('admin.login.password') %></label>
+                <input id="password" type="password" name="password" required>
+            </div>
+            <div class="login-actions">
+                <button type="submit"><%= __('admin.login.submit') %></button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

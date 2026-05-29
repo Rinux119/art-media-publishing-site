@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title><%= collection.name %></title>
+<link rel="stylesheet" type="text/css" media="screen" title="Custom Settings" href="<%= assetUrl('/content/custom.css') %>" >
+<link rel="stylesheet" type="text/css" media="screen" title="Custom Settings" href="<%= assetUrl('/resources/css/master.css') %>" >
+<link rel="stylesheet" href="<%= assetUrl('/resources/public-collection.css') %>" >
+
+<script type="text/javascript">
+window.AgMode = "publish";
+cellRolloverColor="#A1A1A1";
+cellColor="#949494";
+</script>
+<script type="text/javascript" src="<%= assetUrl('/resources/js/live_update.js') %>"></script>
+</head>
+
+<body>
+
+<div id="wrapper_thumb">
+  <% const shouldHideInfo = !!(collection && collection.hide_info); %>
+  <% const shouldShowHiddenCredit = shouldHideInfo && !!(collection && collection.show_credit); %>
+  <%- include('./partials/collection/site-header', { shouldHideInfo, collections, assetUrl }) %>
+
+  <% const resolvedDisplayType = (typeof displayType !== 'undefined' && displayType) ? displayType : ((collection && collection.display_type) ? collection.display_type : 'single'); %>
+  <% const getLargeUrl = (mediaItem) => { const base = mediaItem.filename.replace(/\.[^/.]+$/, ''); return '/' + collection.slug + '/' + base + '_large'; }; %>
+  <% const gridClass = resolvedDisplayType === 'wall' ? 'wall-grid' : (resolvedDisplayType === 'diptych' ? 'thumb-grid thumb-grid-diptych' : 'thumb-grid thumb-grid-single'); %>
+  <% const reportImageCount = Array.isArray(media) ? media.length : 0; %>
+  <% const reportColumnCount = reportImageCount <= 3 ? Math.max(1, reportImageCount) : Math.ceil(Math.sqrt(reportImageCount)); %>
+  <div id="stage">
+    <% if (resolvedDisplayType === 'report') { %>
+      <%- include('./partials/collection/report-layout', { media, reportColumnCount, getLargeUrl, reportHtml, collection }) %>
+    <% } else { %>
+      <%- include('./partials/collection/standard-layout', { collection, gridClass, resolvedDisplayType, reportHtml, wallBatchSize }) %>
+    <% } %>
+  </div>
+
+  <div class="clear"></div>
+
+  <%- include('./partials/collection/site-footer', { shouldHideInfo, shouldShowHiddenCredit }) %>
+</div>
+<% if (resolvedDisplayType !== 'report') { %>
+<script id="wall-items-json" type="application/json"><%- JSON.stringify(media) %></script>
+<script type="text/javascript" src="<%= assetUrl('/resources/js/public-collection.js') %>"></script>
+<% } %>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= __('admin.collectionDetail.manageCollection', { name: collection.name }) %></title>
+    <link rel="stylesheet" href="<%= assetUrl('/resources/admin-base.css') %>">
+    <link rel="stylesheet" href="<%= assetUrl('/resources/admin-collection-detail.css') %>">
+    <meta name="csrf-token" content="<%= csrfToken %>">
+</head>
+<body>
+    <div class="container" id="collection-detail-page" data-collection-id="<%= collection.id %>">
+        <% const totalMediaCount = media.length; %>
+        <% const imageCount = media.filter((m) => !m.isVideo).length; %>
+        <% const videoCount = media.filter((m) => !!m.isVideo).length; %>
+        <% const reportedCount = media.filter((m) => typeof m.report_markdown === 'string' && m.report_markdown.trim()).length; %>
+        <% const unpublishedCount = media.filter((m) => !m.is_published || (m.report_markdown || '') !== (m.published_report_markdown || '')).length; %>
+        <% const hasPendingDraftChanges = ((collection.report_markdown || '') !== (collection.published_report_markdown || '') || media.some((m) => !m.is_published || !!m.is_deleted_draft || (m.report_markdown || '') !== (m.published_report_markdown || '') || Number(m.order_index || 0) !== Number(m.published_order_index || 0))); %>
+        <div class="page-header">
+            <div>
+                <a href="/admin" class="btn-link"><%= __('admin.settings.backToDashboard') %></a>
+                <h1 style="margin-top: 1rem;"><%= __('admin.collectionDetail.manageCollection', { name: collection.name }) %></h1>
+                <p class="page-subtitle"><%= __('admin.collectionDetail.collectionContentManagement') %></p>
+            </div>
+            <div class="stat-row">
+                <span class="stat-pill"><%= __('admin.collectionDetail.totalMedia') %> <strong><%= totalMediaCount %></strong></span>
+                <span class="stat-pill"><%= __('admin.collectionDetail.images') %> <strong><%= imageCount %></strong></span>
+                <span class="stat-pill"><%= __('admin.collectionDetail.videos') %> <strong><%= videoCount %></strong></span>
+                <span class="stat-pill"><%= __('admin.collectionDetail.pendingPublish') %> <strong id="unpublished-count"><%= unpublishedCount %></strong></span>
+                <span class="stat-pill"><%= __('admin.collectionDetail.reportedCount') %> <strong id="reported-count"><%= reportedCount %></strong></span>
+            </div>
+        </div>
+        <div id="page-notice" class="page-notice" role="status" aria-live="polite"></div>
+        <%- include('./partials/collection_detail/report-section', { collection }) %>
+        <%- include('./partials/collection_detail/upload-section', { collection }) %>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2><%= __('admin.collectionDetail.mediaManagement') %></h2>
+                    <p class="section-subtitle"><%= __('admin.collectionDetail.mediaManagementHint') %></p>
+                </div>
+            </div>
+
+            <div class="toolbar-box">
+                <div class="toolbar-row">
+                    <input id="media-search" type="text" placeholder="<%= __('admin.collectionDetail.searchFilename') %>">
+                    <select id="media-type-filter">
+                        <option value=""><%= __('admin.collectionDetail.allMedia') %></option>
+                        <option value="image"><%= __('admin.collectionDetail.images') %></option>
+                        <option value="video"><%= __('admin.collectionDetail.videos') %></option>
+                    </select>
+                    <select id="media-report-filter">
+                        <option value=""><%= __('admin.collectionDetail.allReportStatus') %></option>
+                        <option value="reported"><%= __('admin.collectionDetail.reported') %></option>
+                        <option value="empty"><%= __('admin.collectionDetail.noDescription') %></option>
+                    </select>
+                    <button id="clear-media-filters" type="button"><%= __('admin.dashboard.clearFilters') %></button>
+                </div>
+                <div class="toolbar-meta">
+                    <span id="media-results-count"><%= __('admin.collectionDetail.showingMediaCount', { shown: totalMediaCount, total: totalMediaCount }) %></span>
+                    <span id="media-delete-count"><%= __('admin.collectionDetail.pendingDeleteCount', { count: 0 }) %></span>
+                    <span class="toolbar-note"><%= __('admin.collectionDetail.sortBeforeClearMedia') %></span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="actions-right manage-actions">
+                    <button id="toggle-manage-mode" class="btn-delete-selected" type="button"><%= __('admin.collectionDetail.manageMedia') %></button>
+                </div>
+            </div>
+
+            <div class="media-grid" id="media-grid">
+            <% media.forEach(function(media) { %>
+                <%- include('./partials/collection_detail/media-item', { media, collection }) %>
+            <% }); %>
+            </div>
+            <div id="media-empty-state" class="empty-state"><%= __('admin.collectionDetail.noMatchMedia') %></div>
+            <div class="actions-right" style="margin-top: 16px;">
+                <span id="media-order-status" class="autosave-status" aria-live="polite"></span>
+                <button id="save-media-order" class="btn-primary"><%= __('admin.collectionDetail.saveOrder') %></button>
+            </div>
+        </div>
+        <%- include('./partials/collection_detail/draft-panel', { hasPendingDraftChanges }) %>
+    </div>
+
+    <script>window.__i18n = <%- JSON.stringify(__catalog) %>;</script>
+    <script src="<%= assetUrl('/resources/js/admin-collection-detail.js') %>"></script>
+</body>
+</html>

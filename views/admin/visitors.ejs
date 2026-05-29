@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= __('admin.visitors.title') %> - Admin</title>
+    <link rel="stylesheet" href="<%= assetUrl('/resources/admin-base.css') %>">
+    <link rel="stylesheet" href="<%= assetUrl('/resources/admin-visitors.css') %>">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <a href="/admin" class="btn-link"><%= __('admin.visitors.backToDashboard') %></a>
+                <h1 style="margin-top: 1rem;"><%= __('admin.visitors.title') %></h1>
+                <p class="page-subtitle"><%= __('admin.visitors.subtitle') %></p>
+            </div>
+            <div class="stat-row">
+                <span class="stat-pill"><%= __('admin.visitors.totalRecords') %> <strong><%= stats.totalVisits %></strong></span>
+                <span class="stat-pill"><%= __('admin.visitors.uniqueIps') %> <strong><%= stats.uniqueIps %></strong></span>
+            </div>
+        </div>
+
+        <div class="sort-bar">
+            <span class="sort-label"><%= __('admin.visitors.sortBy') %></span>
+            <a href="/admin/visitors?sort=date" class="btn-link sort-btn <%= currentSort === 'date' ? 'sort-active' : '' %>"><%= __('admin.visitors.byDate') %></a>
+            <a href="/admin/visitors?sort=count" class="btn-link sort-btn <%= currentSort === 'count' ? 'sort-active' : '' %>"><%= __('admin.visitors.byCount') %></a>
+        </div>
+
+        <% if (visits && visits.length > 0) { %>
+            <% if (currentSort === 'count') { %>
+                <table class="visit-table">
+                    <thead>
+                        <tr>
+                            <th><%= __('admin.visitors.ip') %></th>
+                            <th><%= __('admin.visitors.visitCount') %></th>
+                            <th><%= __('admin.visitors.lastVisitTime') %></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% visits.forEach(function(v) { %>
+                            <tr>
+                                <td class="visit-ip"><%= v.ip %></td>
+                                <td class="visit-count"><%= v.visit_count %></td>
+                                <td class="visit-time"><%= new Date(v.last_visited_at).toLocaleString('zh-CN', { hour12: false }) %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <table class="visit-table">
+                    <thead>
+                        <tr>
+                            <th><%= __('admin.visitors.ip') %></th>
+                            <th><%= __('admin.visitors.visitPath') %></th>
+                            <th><%= __('admin.visitors.userAgent') %></th>
+                            <th><%= __('admin.visitors.visitTime') %></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% visits.forEach(function(v) { %>
+                            <tr>
+                                <td class="visit-ip"><%= v.ip %></td>
+                                <td class="visit-path" title="<%= v.path %>"><%= v.path %></td>
+                                <td class="visit-ua" title="<%= v.user_agent || '' %>"><%= v.user_agent ? v.user_agent.substring(0, 40) + (v.user_agent.length > 40 ? '...' : '') : '' %></td>
+                                <td class="visit-time"><%= new Date(v.visited_at).toLocaleString('zh-CN', { hour12: false }) %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } %>
+        <% } else { %>
+            <p class="empty-hint"><%= __('admin.visitors.noVisits') %></p>
+        <% } %>
+    </div>
+</body>
+</html>

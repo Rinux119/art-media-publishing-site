@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= __('admin.dashboard.title') %></title>
+    <link rel="stylesheet" href="<%= assetUrl('/resources/admin-base.css') %>">
+    <link rel="stylesheet" href="<%= assetUrl('/resources/admin-dashboard.css') %>">
+    <meta name="csrf-token" content="<%= csrfToken %>">
+</head>
+<body>
+    <div class="container">
+        <% const totalCollections = collections.length; %>
+        <% const hiddenEntryCount = collections.filter((col) => !!col.is_hidden).length; %>
+        <% const hiddenInfoCount = collections.filter((col) => !!col.hide_info).length; %>
+        <% const unpublishedUpdateCount = collections.filter((col) => !!col.has_pending_draft_changes).length; %>
+        <div class="page-header">
+            <div>
+                <h1><%= __('admin.dashboard.title') %></h1>
+
+            </div>
+            <div class="action-group">
+                <a href="/" class="btn-link" target="_blank" rel="noopener noreferrer"><%= __('admin.dashboard.homePage') %></a>
+                <% if (isAdmin) { %>
+                <a href="/admin/users" class="btn-link"><%= __('admin.dashboard.userManagement') %></a>
+                <% } else { %>
+                <a href="javascript:void(0)" class="btn-link" id="non-admin-users-link"><%= __('admin.dashboard.userManagement') %></a>
+                <% } %>
+                <a href="/admin/settings" class="btn-link"><%= __('admin.dashboard.systemSettings') %></a>
+                <a href="/admin/logout" class="logout btn-link btn-ghost"><%= __('admin.dashboard.logout') %></a>
+            </div>
+        </div>
+        <div id="page-notice" class="page-notice" role="status" aria-live="polite"></div>
+
+        <%- include('./partials/dashboard/index-management', { indexDisplayType, indexImageLeft, indexImage, indexImageRight }) %>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2><%= __('admin.dashboard.collectionManagement') %></h2>
+                    <p class="section-subtitle"><%= __('admin.dashboard.collectionSearchHint') %></p>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-pill"><%= __('admin.dashboard.total') %> <strong id="total-collections-count"><%= totalCollections %></strong></span>
+                    <span class="stat-pill"><%= __('admin.dashboard.hiddenEntry') %> <strong id="hidden-entry-count"><%= hiddenEntryCount %></strong></span>
+                    <span class="stat-pill"><%= __('admin.dashboard.hiddenInfo') %> <strong id="hidden-info-count"><%= hiddenInfoCount %></strong></span>
+                    <span class="stat-pill"><%= __('admin.dashboard.unpublishedUpdate') %> <strong id="unpublished-update-count"><%= unpublishedUpdateCount %></strong></span>
+                    <span id="collection-order-status" class="autosave-status" aria-live="polite"></span>
+                    <button id="save-order" class="btn-primary"><%= __('admin.dashboard.saveOrder') %></button>
+                </div>
+            </div>
+
+            <div class="collection-toolbar">
+                <div class="toolbar-row">
+                    <input id="collection-search" type="text" placeholder="<%= __('admin.dashboard.searchPlaceholder') %>">
+                    <select id="collection-type-filter">
+                        <option value=""><%= __('admin.dashboard.allTypes') %></option>
+                        <option value="single"><%= __('admin.displayType.single') %></option>
+                        <option value="diptych"><%= __('admin.displayType.diptych') %></option>
+                        <option value="wall"><%= __('admin.displayType.wall') %></option>
+                        <option value="report"><%= __('admin.displayType.report') %></option>
+                    </select>
+                    <select id="collection-status-filter">
+                        <option value=""><%= __('admin.dashboard.allStatuses') %></option>
+                        <option value="entry-visible"><%= __('admin.dashboard.entryVisible') %></option>
+                        <option value="entry-hidden"><%= __('admin.dashboard.entryHidden') %></option>
+                        <option value="info-hidden"><%= __('admin.dashboard.infoHidden') %></option>
+                        <option value="has-pending"><%= __('admin.dashboard.hasPending') %></option>
+                        <option value="any-hidden"><%= __('admin.dashboard.anyHidden') %></option>
+                    </select>
+                    <button id="clear-collection-filters" type="button" class="btn-secondary"><%= __('admin.dashboard.clearFilters') %></button>
+                </div>
+                <div class="toolbar-meta">
+                    <span id="collection-results-count"><%= __('admin.dashboard.showingCount', { shown: totalCollections, total: totalCollections }) %></span>
+                    <span class="toolbar-note"><%= __('admin.dashboard.sortBeforeClear') %></span>
+                </div>
+            </div>
+
+            <div id="collection-list" class="collection-list">
+                <% collections.forEach(function(col) { %>
+                    <%- include('./partials/dashboard/collection-card', { col }) %>
+                <% }); %>
+            </div>
+            <div id="collection-empty-state" class="empty-state"><%= __('admin.dashboard.noMatch') %></div>
+
+            <%- include('./partials/dashboard/add-collection-panel') %>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div>
+                    <h2><%= __('admin.dashboard.visitorLog') %></h2>
+                    <p class="section-subtitle"><%= __('admin.dashboard.visitorLogHint') %></p>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-pill"><%= __('admin.dashboard.totalRecords') %> <strong><%= visitStats.totalVisits %></strong></span>
+                    <span class="stat-pill"><%= __('admin.dashboard.uniqueIps') %> <strong><%= visitStats.uniqueIps %></strong></span>
+                </div>
+            </div>
+            <% if (recentVisits && recentVisits.length > 0) { %>
+                <table class="visit-table">
+                    <thead>
+                        <tr>
+                            <th><%= __('admin.dashboard.ip') %></th>
+                            <th><%= __('admin.dashboard.visitPath') %></th>
+                            <th><%= __('admin.dashboard.visitTime') %></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% recentVisits.forEach(function(v) { %>
+                            <tr>
+                                <td class="visit-ip"><%= v.ip %></td>
+                                <td class="visit-path"><%= v.path %></td>
+                                <td class="visit-time"><%= new Date(v.visited_at).toLocaleString('zh-CN', { hour12: false }) %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <p class="section-subtitle"><%= __('admin.dashboard.noVisits') %></p>
+            <% } %>
+            <div style="margin-top: 10px;">
+                <a href="/admin/visitors" class="btn-link"><%= __('admin.dashboard.viewAllVisits') %></a>
+            </div>
+        </div>
+    </div>
+
+    <script>window.__i18n = <%- JSON.stringify(__catalog) %>;</script>
+    <script src="<%= assetUrl('/resources/js/admin-dashboard.js') %>"></script>
+    <% if (!isAdmin) { %>
+    <script>
+    (function() {
+        var notAdminMsg = <%- JSON.stringify(__('admin.login.notAdmin')) %>;
+        var link = document.getElementById('non-admin-users-link');
+        if (link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert(notAdminMsg);
+            });
+        }
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('error') === 'not_admin') {
+            alert(notAdminMsg);
+            window.history.replaceState({}, '', '/admin');
+        }
+    })();
+    </script>
+    <% } %>
+</body>
+</html>
