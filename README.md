@@ -61,7 +61,7 @@
 
 - Node.js `>= 18.17`
 - npm `>= 9`
-- FFmpeg 和 FFprobe：`npm install` 时会自动下载内置二进制（通过 `ffmpeg-static` 和 `@ffprobe-installer/ffprobe`），无需手动安装；如需使用系统安装的版本，可通过 `FFMPEG_PATH` / `FFPROBE_PATH` 环境变量指定
+- FFmpeg 和 FFprobe
 
 ## 快速开始
 

@@ -61,42 +61,23 @@
 
 - Node.js `>= 18.17`
 - npm `>= 9`
-- FFmpeg 和 FFprobe：`npm install` 時會自動下載內建二進位（透過 `ffmpeg-static` 和 `@ffprobe-installer/ffprobe`），無需手動安裝；如需使用系統安裝的版本，可透過 `FFMPEG_PATH` / `FFPROBE_PATH` 環境變數指定
+- `ffmpeg` 和 `ffprobe`（僅在需要處理影片時必須安裝）
 
 ## 快速開始
-
-### 一鍵啟動（推薦）
-
-macOS / Linux：
-```bash
-./start.sh
-```
-
-Windows：
-```cmd
-start.bat
-```
-
-啟動腳本會自動完成以下操作：
-1. 偵測 Node.js 版本（如未安裝則提示安裝方式）
-2. 自動建立 `.env`（從 `.env.example` 模板生成，含隨機金鑰）
-3. 自動安裝依賴（`npm install`）
-4. 偵測 FFmpeg/FFprobe 可用性
-5. 啟動服務
-
-### 手動步驟
 
 1. 安裝依賴
 ```bash
 npm install
 ```
-2. 啟動服務
+2. 複製環境變數模板
+```bash
+cp .env.example .env
+```
+3. 啟動服務
 ```bash
 npm start        # 生產環境
 npm run dev      # 開發環境
 ```
-
-> `.env` 檔案會在首次啟動時自動從 `.env.example` 建立並生成隨機金鑰，無需手動複製。
 
 預設監聽 `http://localhost:3000`
 
@@ -108,9 +89,6 @@ npm run dev      # 開發環境
 
 | 命令                | 說明                  |
 | ----------------- | ------------------- |
-| `./start.sh`      | macOS / Linux 一鍵啟動  |
-| `start.bat`       | Windows 一鍵啟動        |
-| `npm run setup`   | 執行自動化設定（.env、依賴、FFmpeg 偵測） |
 | `npm start`       | 啟動服務                |
 | `npm run dev`     | 以開發環境變數啟動           |
 | `npm run check`   | 語法檢查                |
@@ -166,7 +144,6 @@ npm run dev      # 開發環境
 │       ├── thumb/
 │       └── video/
 ├── lib/                      # 後端核心模組
-│   └── setup.js              # 自動化設定（.env、依賴、FFmpeg 偵測）
 ├── routes/                   # 公開站與後台路由
 ├── resources/                # 靜態前端資源（CSS、JS）
 ├── views/                    # EJS 模板與 partials
@@ -175,9 +152,6 @@ npm run dev      # 開發環境
 ├── db.js                     # SQLite 初始化與 schema 遷移
 ├── config.js                 # 業務/內容設定管理
 ├── server.js                 # 應用入口
-├── setup.js                  # CLI 設定入口
-├── start.sh                  # macOS / Linux 一鍵啟動腳本
-├── start.bat                 # Windows 一鍵啟動腳本
 └── videoProcessor.js         # FFmpeg 影片處理
 ```
 
@@ -247,7 +221,7 @@ server {
 
 - Session 持久化到 SQLite，多實例共享仍需額外方案
 - 媒體儲存於本地檔案系統，雲端物件儲存需進一步抽象
-- 影片處理依賴 `ffmpeg`/`ffprobe`，`npm install` 時會自動下載內建二進位；如系統已安裝也可直接使用，或透過 `FFMPEG_PATH`/`FFPROBE_PATH` 環境變數指定路徑
+- 影片處理依賴系統安裝的 `ffmpeg`/`ffprobe`，需支援 H.264/AAC 編碼
 - 啟用 CDN 後，修改 Nginx 設定需手動重新整理 CDN 快取
 
 ## 授權條款

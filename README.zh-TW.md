@@ -61,7 +61,7 @@
 
 - Node.js `>= 18.17`
 - npm `>= 9`
-- FFmpeg 和 FFprobe：`npm install` 時會自動下載內建二進位（透過 `ffmpeg-static` 和 `@ffprobe-installer/ffprobe`），無需手動安裝；如需使用系統安裝的版本，可透過 `FFMPEG_PATH` / `FFPROBE_PATH` 環境變數指定
+- FFmpeg 和 FFprobe
 
 ## 快速開始
 
