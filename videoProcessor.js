@@ -110,12 +110,17 @@ const resolveBinaryPath = (name) => {
 
     const localBinCandidate = path.join(__dirname, 'bin', binName);
     if (fs.existsSync(localBinCandidate)) {
-        try { fs.accessSync(localBinCandidate, fs.constants.X_OK); return localBinCandidate; } catch (_) {}
+        if (!isWin) {
+            try { fs.accessSync(localBinCandidate, fs.constants.X_OK); return localBinCandidate; } catch (_) {}
+        } else {
+            return localBinCandidate;
+        }
     }
 
     if (name === 'ffmpeg') {
         try {
-            const p = require('ffmpeg-static');
+            const mod = require('ffmpeg-static');
+            const p = (mod && typeof mod === 'object' && mod.path) ? mod.path : ((typeof mod === 'string') ? mod : null);
             if (p && typeof p === 'string' && fs.existsSync(p)) return p;
         } catch (_) {}
     }
@@ -123,8 +128,14 @@ const resolveBinaryPath = (name) => {
     if (name === 'ffprobe') {
         try {
             const mod = require('@ffprobe-installer/ffprobe');
-            const p = (mod && typeof mod === 'string') ? mod : (mod && mod.path);
-            if (p && typeof p === 'string' && fs.existsSync(p)) return p;
+            const p = (mod && typeof mod === 'object' && mod.path) ? mod.path : ((typeof mod === 'string') ? mod : null);
+            if (p && typeof p === 'string') {
+                if (fs.existsSync(p)) return p;
+                if (isWin && !p.toLowerCase().endsWith('.exe')) {
+                    const exePath = p + '.exe';
+                    if (fs.existsSync(exePath)) return exePath;
+                }
+            }
         } catch (_) {}
     }
 
@@ -144,6 +155,18 @@ const resolveBinaryPath = (name) => {
         }
     } catch (_) {}
 
+    if (isWin) {
+        const nameExe = `${name}.exe`;
+        const which2 = spawnSync('where', [nameExe], { encoding: 'utf8' });
+        if (which2.status === 0) {
+            const p = String(which2.stdout || '').trim();
+            if (p) {
+                const first = p.split(/\r?\n/)[0].trim();
+                if (first) return first;
+            }
+        }
+    }
+
     const commonCandidates = name === 'ffmpeg'
         ? (isWin
             ? ['C:\\ffmpeg\\bin\\ffmpeg.exe', 'C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe', 'C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe']
@@ -154,7 +177,7 @@ const resolveBinaryPath = (name) => {
     for (const candidate of commonCandidates) {
         try {
             if (!candidate || !fs.existsSync(candidate)) continue;
-            fs.accessSync(candidate, fs.constants.X_OK);
+            if (!isWin) fs.accessSync(candidate, fs.constants.X_OK);
             return candidate;
         } catch (_) {}
     }
@@ -165,6 +188,8 @@ const configureFfmpegBinaries = () => {
     const ffmpegPath = resolveBinaryPath('ffmpeg');
     const ffprobePath = resolveBinaryPath('ffprobe');
     ffmpegProbe = { ffmpegPath, ffprobePath };
+    console.log(`[videoProcessor] ffmpeg: ${ffmpegPath}`);
+    console.log(`[videoProcessor] ffprobe: ${ffprobePath}`);
 };
 
 configureFfmpegBinaries();
@@ -172,11 +197,24 @@ configureFfmpegBinaries();
 const isFfmpegAvailable = () => {
     if (ffmpegAvailable !== null) return ffmpegAvailable;
 
-    const ffmpegResult = spawnSync(ffmpegProbe.ffmpegPath || 'ffmpeg', ['-version'], { stdio: 'ignore' });
-    const ffprobeResult = spawnSync(ffmpegProbe.ffprobePath || 'ffprobe', ['-version'], { stdio: 'ignore' });
+    const isWin = process.platform === 'win32';
+    const spawnOpts = isWin ? { stdio: 'ignore', windowsHide: true } : { stdio: 'ignore' };
+
+    const ffmpegResult = spawnSync(ffmpegProbe.ffmpegPath || 'ffmpeg', ['-version'], spawnOpts);
+    const ffprobeResult = spawnSync(ffmpegProbe.ffprobePath || 'ffprobe', ['-version'], spawnOpts);
+
+    console.log(`[videoProcessor] ffmpeg -version: exit=${ffmpegResult.status}, error=${ffmpegResult.error ? ffmpegResult.error.message : 'none'}`);
+    console.log(`[videoProcessor] ffprobe -version: exit=${ffprobeResult.status}, error=${ffprobeResult.error ? ffprobeResult.error.message : 'none'}`);
+
     ffmpegAvailable = ffmpegResult.status === 0 && ffprobeResult.status === 0;
     if (!ffmpegAvailable) {
         console.warn('FFmpeg/ffprobe not found; video compression is disabled.');
+        if (ffmpegResult.status === 0 && ffprobeResult.status !== 0) {
+            console.warn('  ffmpeg is available but ffprobe is NOT. Video processing requires both.');
+        }
+        if (ffprobeResult.status === 0 && ffmpegResult.status !== 0) {
+            console.warn('  ffprobe is available but ffmpeg is NOT. Video processing requires both.');
+        }
     }
     return Promise.resolve(ffmpegAvailable);
 };
@@ -191,7 +229,9 @@ const getVideoInfo = (inputPath) => {
             inputPath
         ];
 
-        const proc = spawn(ffmpegProbe.ffprobePath || 'ffprobe', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+        const spawnOpts = { stdio: ['ignore', 'pipe', 'pipe'] };
+        if (process.platform === 'win32') spawnOpts.windowsHide = true;
+        const proc = spawn(ffmpegProbe.ffprobePath || 'ffprobe', args, spawnOpts);
         let stdout = '';
         let stderr = '';
 
@@ -256,7 +296,9 @@ const compressToMP4 = async (inputPath, outputPath, options = {}) => {
             outputPath
         ];
 
-        const proc = spawn(ffmpegProbe.ffmpegPath || 'ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });
+        const transcodeOpts = { stdio: ['ignore', 'ignore', 'pipe'] };
+        if (process.platform === 'win32') transcodeOpts.windowsHide = true;
+        const proc = spawn(ffmpegProbe.ffmpegPath || 'ffmpeg', args, transcodeOpts);
         let stderr = '';
         proc.stderr.on('data', (chunk) => { stderr += chunk.toString('utf8'); });
         proc.on('error', (err) => {
