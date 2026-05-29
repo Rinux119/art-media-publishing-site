@@ -426,8 +426,14 @@ const processUploadedVideo = async (filePath, targetDir, options = {}) => {
     }
 };
 
+const getFfmpegPaths = () => ({
+    ffmpeg: ffmpegProbe.ffmpegPath,
+    ffprobe: ffmpegProbe.ffprobePath
+});
+
 module.exports = {
     isFfmpegAvailable,
+    getFfmpegPaths,
     getVideoInfo,
     compressToMP4,
     compressVideoInPlace,

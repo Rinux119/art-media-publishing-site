@@ -926,8 +926,10 @@ const registerAdminRoutes = ({
         let ffmpegVersion = null;
         try {
             const { spawnSync } = require('child_process');
-            const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
-            const result = spawnSync(ffmpegPath, ['-version'], { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+            const vp = require('../videoProcessor');
+            const ffmpegPath = vp.getFfmpegPaths ? vp.getFfmpegPaths().ffmpeg : (process.env.FFMPEG_PATH || 'ffmpeg');
+            const spawnOpts = process.platform === 'win32' ? { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true } : { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] };
+            const result = spawnSync(ffmpegPath, ['-version'], spawnOpts);
             if (result.status === 0) {
                 const match = (result.stdout || '').match(/ffmpeg version\s+([^\s]+)/);
                 ffmpegVersion = match ? match[1] : 'available';
