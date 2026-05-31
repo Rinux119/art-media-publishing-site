@@ -190,11 +190,18 @@
     object-fit: cover;
     aspect-ratio: 1 / 1;
   }
+  .report-gallery.cols-1 .media-item {
+    height: auto;
+    overflow: visible;
+    background: transparent;
+  }
   .report-gallery.cols-1 .media-item img,
   .report-gallery.cols-1 .media-item video {
-    aspect-ratio: auto;
+    width: 100%;
+    height: auto;
     max-height: 82vh;
     object-fit: contain;
+    background: transparent;
   }
   .report-text {
     width: min(900px, 100%);

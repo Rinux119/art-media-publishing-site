@@ -258,7 +258,7 @@ const registerPublicRoutes = ({
         const reportHtml = renderMarkdown(publicCollection.report_markdown || '');
         const rawMedia = getPublishedMediaByCollectionId(collection.id);
         const totalMediaCount = rawMedia.length;
-        const preferredSize = 'thumb';
+        const preferredSize = displayType === 'report' ? 'large' : 'thumb';
         const processedMedia = rawMedia.map((mediaItem) => {
             const mapped = mapMediaForCollection(publicCollection, mediaItem);
             if (mapped.isImage) {
