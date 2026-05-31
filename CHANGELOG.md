@@ -6,6 +6,35 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.10.0] - 2026-05-31
+
+### Added
+
+- Lightbox 大图查看扩展至所有展示模式（single/diptych/wall/report），点击图片不再跳转新页面
+- 双联画（diptych）模式 Lightbox 同时展示一对图片，按对导航切换，移动端自动上下堆叠
+- 照片墙（wall）模式使用 Lightbox 查看大图，替代原有跳转行为
+
+### Fixed
+
+- 修复 wall 模式图片无法加载的问题：`wall-items-json` 和 `public-collection.js` 被错误排除
+- 修复 `resolvedDisplayType` 变量在 `<head>` 中未定义导致所有作品集 500 错误
+
+## [2.9.0] - 2026-05-31
+
+### Added
+
+- 作品集（single/diptych/report 模式）点击图片弹出 Lightbox 大图查看，不再跳转新页面
+- Lightbox 支持左右箭头切换、键盘导航（Esc 关闭、← → 切换）、点击遮罩关闭
+- Lightbox 底部展示当前媒体项的作品阐述（Markdown 渲染）
+- 左上角显示当前位置计数（如 3 / 12）
+- 视频媒体在 Lightbox 中自动静音循环播放
+- 新增 `resources/lightbox.css` 和 `resources/js/lightbox.js`
+
+### Fixed
+
+- 作品报告模式图片使用 `large`（2400px）变体替代 `thumb`（400px），修复单图展示模糊问题
+- 作品报告模式单图（cols-1）去除黑边：容器和图片元素背景改为透明，容器高度改为自适应，溢出改为可见
+
 ## [2.8.4] - 2026-05-31
 
 ### Fixed

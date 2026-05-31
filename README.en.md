@@ -24,6 +24,7 @@ For PRs, I'll do my best to understand the code you submit, but I can't promise 
 
 ### Public Site
 - Homepage, collection list, full-size image viewer, artwork description
+- Lightbox viewer: all display modes (single/diptych/wall/report) open a Lightbox overlay on click instead of navigating to a new page; supports left/right navigation, keyboard controls (Esc to close, ← → to switch), and click-to-dismiss; diptych mode shows both images side by side (stacked vertically on mobile); artwork description rendered as Markdown at the bottom
 
 ### Admin Dashboard
 - Login authentication, user management, homepage media management, collection management

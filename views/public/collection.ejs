@@ -1,5 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<% const resolvedDisplayType = (typeof displayType !== 'undefined' && displayType) ? displayType : ((collection && collection.display_type) ? collection.display_type : 'single'); %>
+<% const getLargeUrl = (mediaItem) => { const base = mediaItem.filename.replace(/\.[^/.]+$/, ''); return '/' + collection.slug + '/' + base + '_large'; }; %>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -7,6 +9,7 @@
 <link rel="stylesheet" type="text/css" media="screen" title="Custom Settings" href="<%= assetUrl('/content/custom.css') %>" >
 <link rel="stylesheet" type="text/css" media="screen" title="Custom Settings" href="<%= assetUrl('/resources/css/master.css') %>" >
 <link rel="stylesheet" href="<%= assetUrl('/resources/public-collection.css') %>" >
+<link rel="stylesheet" href="<%= assetUrl('/resources/lightbox.css') %>" >
 
 <script type="text/javascript">
 window.AgMode = "publish";
@@ -23,8 +26,6 @@ cellColor="#949494";
   <% const shouldShowHiddenCredit = shouldHideInfo && !!(collection && collection.show_credit); %>
   <%- include('./partials/collection/site-header', { shouldHideInfo, collections, assetUrl }) %>
 
-  <% const resolvedDisplayType = (typeof displayType !== 'undefined' && displayType) ? displayType : ((collection && collection.display_type) ? collection.display_type : 'single'); %>
-  <% const getLargeUrl = (mediaItem) => { const base = mediaItem.filename.replace(/\.[^/.]+$/, ''); return '/' + collection.slug + '/' + base + '_large'; }; %>
   <% const gridClass = resolvedDisplayType === 'wall' ? 'wall-grid' : (resolvedDisplayType === 'diptych' ? 'thumb-grid thumb-grid-diptych' : 'thumb-grid thumb-grid-single'); %>
   <% const reportImageCount = Array.isArray(media) ? media.length : 0; %>
   <% const reportColumnCount = reportImageCount <= 3 ? Math.max(1, reportImageCount) : Math.ceil(Math.sqrt(reportImageCount)); %>
@@ -40,8 +41,19 @@ cellColor="#949494";
 
   <%- include('./partials/collection/site-footer', { shouldHideInfo, shouldShowHiddenCredit }) %>
 </div>
-<% if (resolvedDisplayType !== 'report') { %>
+<div id="lightbox-overlay" class="lightbox-overlay">
+  <button class="lightbox-close" aria-label="Close"></button>
+  <span class="lightbox-counter"></span>
+  <div class="lightbox-body">
+    <button class="lightbox-nav lightbox-prev" aria-label="Previous"></button>
+    <div class="lightbox-media-wrap"></div>
+    <button class="lightbox-nav lightbox-next" aria-label="Next"></button>
+  </div>
+  <div class="lightbox-report"></div>
+</div>
 <script id="wall-items-json" type="application/json"><%- JSON.stringify(media) %></script>
+<script type="text/javascript" src="<%= assetUrl('/resources/js/lightbox.js') %>"></script>
+<% if (resolvedDisplayType !== 'report') { %>
 <script type="text/javascript" src="<%= assetUrl('/resources/js/public-collection.js') %>"></script>
 <% } %>
 </body>
