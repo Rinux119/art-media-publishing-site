@@ -228,6 +228,8 @@
       "confirmDeleteBlock": "このブロックを削除してもよろしいですか？",
       "blockDeleted": "ブロックが削除されました",
       "blockDeleteFailed": "ブロックの削除に失敗しました",
+      "mediaBlockCannotDelete": "このタイプのコレクションではメディアブロックを削除できません",
+      "mediaBlockLimitReached": "このコレクションタイプはメディアブロックを1つまでしか追加できません",
       "blockAddFailed": "ブロックの追加に失敗しました",
       "uploading": "アップロード中",
       "uploadSuccess": "アップロード成功",

@@ -1,6 +1,6 @@
 {
   "name": "art-media-publishing-site",
-  "version": "2.15.0",
+  "version": "2.16.0",
   "description": "Art portfolio site with admin publishing workflow, image processing, and video transcoding.",
   "private": false,
   "main": "server.js",

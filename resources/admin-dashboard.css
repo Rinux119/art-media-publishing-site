@@ -147,6 +147,21 @@
             font-weight: 500;
             word-break: break-word;
         }
+        .collection-handle {
+            cursor: grab;
+            font-size: 14px;
+            color: #aaa;
+            padding: 0 2px;
+            user-select: none;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .collection-handle:active { cursor: grabbing; }
+        .collection-card-head-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .collection-statuses {
             display: flex;
             gap: 8px;

@@ -501,13 +501,20 @@ const registerAdminRoutes = ({
         const { name, slug } = req.body;
         const displayType = normalizeCollectionDisplayType(req.body.displayType || req.body.display_type);
         const result = db.prepare('INSERT INTO collections (name, slug, display_type, is_hidden) VALUES (?, ?, ?, 1)').run(name, slug, displayType);
+        const collectionId = result.lastInsertRowid;
+        const insertBlock = db.prepare(`
+            INSERT INTO collection_blocks (collection_id, block_type, order_index, markdown, media_ids, published_markdown, published_media_ids)
+            VALUES (?, ?, ?, '', '[]', '', '[]')
+        `);
+        insertBlock.run(collectionId, 'media', 0);
+        insertBlock.run(collectionId, 'text', 1);
         invalidateCachedData({ collectionSlug: slug });
 
         if (wantsJson(req)) {
             return res.json({
                 success: true,
                 collection: {
-                    id: result.lastInsertRowid,
+                    id: collectionId,
                     name,
                     slug,
                     display_type: displayType,
@@ -899,8 +906,11 @@ const registerAdminRoutes = ({
         }
         const blockType = (req.body.block_type === 'media') ? 'media' : 'text';
         if (blockType === 'media' && collection.display_type !== 'report') {
-            if (wantsJson(req)) return res.status(400).json({ success: false, error: 'Media blocks can only be added in report mode' });
-            return res.redirect(`/admin/collections/${req.params.id}`);
+            const existingMediaBlocks = db.prepare('SELECT COUNT(*) AS count FROM collection_blocks WHERE collection_id = ? AND block_type = \'media\' AND is_deleted_draft = 0').get(req.params.id);
+            if (existingMediaBlocks && existingMediaBlocks.count >= 1) {
+                if (wantsJson(req)) return res.status(400).json({ success: false, error: req.__('admin.collectionDetail.mediaBlockLimitReached') });
+                return res.redirect(`/admin/collections/${req.params.id}`);
+            }
         }
         const maxOrder = db.prepare('SELECT MAX(order_index) AS max FROM collection_blocks WHERE collection_id = ?').get(req.params.id);
         const nextOrder = (maxOrder && maxOrder.max !== null) ? maxOrder.max + 1 : 0;

@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="<%= csrfToken %>">
 </head>
 <body>
-    <div class="container" id="collection-detail-page" data-collection-id="<%= collection.id %>">
+    <div class="container" id="collection-detail-page" data-collection-id="<%= collection.id %>" data-display-type="<%= collection.display_type || 'single' %>">
         <% const totalMediaCount = media.length; %>
         <% const imageCount = media.filter((m) => !m.isVideo).length; %>
         <% const videoCount = media.filter((m) => !!m.isVideo).length; %>
@@ -120,7 +120,7 @@
 
         <div class="block-add-bar">
             <button type="button" id="add-text-block" class="btn-add-block"><%= __('admin.collectionDetail.addTextBlock') %></button>
-            <button type="button" id="add-media-block" class="btn-add-block" style="<%= collection.display_type === 'report' ? '' : 'display:none;' %>"><%= __('admin.collectionDetail.addMediaBlock') %></button>
+            <button type="button" id="add-media-block" class="btn-add-block"><%= __('admin.collectionDetail.addMediaBlock') %></button>
         </div>
 
         <%- include('./partials/collection_detail/draft-panel', { hasPendingDraftChanges }) %>

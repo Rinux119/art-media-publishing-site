@@ -692,8 +692,14 @@
             }
         };
 
+        let dragStartFromHandle = false;
+
+        list.addEventListener('mousedown', (e) => {
+            dragStartFromHandle = !!e.target.closest('.collection-handle');
+        });
+
         list.addEventListener('dragstart', (e) => {
-            if (e.target.closest('button') || e.target.closest('a') || e.target.closest('form') || e.target.closest('select') || e.target.closest('input')) {
+            if (!dragStartFromHandle) {
                 e.preventDefault();
                 return;
             }

@@ -228,6 +228,8 @@
       "confirmDeleteBlock": "確定要刪除這個區塊嗎？",
       "blockDeleted": "區塊已刪除",
       "blockDeleteFailed": "區塊刪除失敗",
+      "mediaBlockCannotDelete": "此類型作品集的媒體區塊不可刪除",
+      "mediaBlockLimitReached": "當前作品集類型只支援一個媒體區塊",
       "blockAddFailed": "區塊新增失敗",
       "uploading": "上傳中",
       "uploadSuccess": "上傳成功",

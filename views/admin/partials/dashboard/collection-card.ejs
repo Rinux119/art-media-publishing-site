@@ -12,7 +12,10 @@
     data-has-pending-changes="<%= col.has_pending_draft_changes ? '1' : '0' %>"
 >
     <div class="collection-card-head">
-        <div class="collection-title" data-role="collection-title"><%= col.name %></div>
+        <div class="collection-card-head-left">
+            <span class="collection-handle" title="<%= __('admin.dashboard.dragToReorder') %>">⠿</span>
+            <div class="collection-title" data-role="collection-title"><%= col.name %></div>
+        </div>
         <div class="collection-statuses" data-role="collection-statuses">
             <% if (col.has_pending_draft_changes) { %>
                 <span class="badge has-pending-changes"><%= __('admin.collectionCard.unpublishedUpdate') %></span>

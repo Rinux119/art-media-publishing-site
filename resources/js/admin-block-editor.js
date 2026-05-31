@@ -3,6 +3,7 @@
     if (!collectionRoot) return;
 
     var collectionId = collectionRoot.dataset.collectionId;
+    var collectionDisplayType = collectionRoot.dataset.displayType || 'single';
     var blockList = document.getElementById('block-list');
     var addTextBtn = document.getElementById('add-text-block');
     var addMediaBtn = document.getElementById('add-media-block');
@@ -231,6 +232,13 @@
     }
 
     function addBlock(blockType) {
+        if (blockType === 'media' && collectionDisplayType !== 'report') {
+            var existingMediaBlocks = blockList.querySelectorAll('.block-card-media');
+            if (existingMediaBlocks.length >= 1) {
+                alert(t.mediaBlockLimitReached || 'This collection type only supports one media block');
+                return;
+            }
+        }
         fetch('/admin/collections/' + collectionId + '/blocks/add?json=1', {
             method: 'POST',
             headers: {
@@ -295,7 +303,17 @@
     updateMoveButtons();
 
     var dragSrcBlock = null;
+    var dragStartFromHandle = false;
+
+    blockList.addEventListener('mousedown', function(e) {
+        dragStartFromHandle = !!e.target.closest('.block-handle');
+    });
+
     blockList.addEventListener('dragstart', function(e) {
+        if (!dragStartFromHandle) {
+            e.preventDefault();
+            return;
+        }
         var card = e.target.closest('.block-card');
         if (!card) return;
         if (e.target.closest('.media-item')) return;

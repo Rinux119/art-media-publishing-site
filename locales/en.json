@@ -228,6 +228,8 @@
       "confirmDeleteBlock": "Are you sure you want to delete this block?",
       "blockDeleted": "Block deleted",
       "blockDeleteFailed": "Failed to delete block",
+      "mediaBlockCannotDelete": "Media block cannot be deleted in this collection type",
+      "mediaBlockLimitReached": "This collection type only supports one media block",
       "blockAddFailed": "Failed to add block",
       "uploading": "Uploading",
       "uploadSuccess": "Upload successful",
