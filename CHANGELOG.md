@@ -6,6 +6,14 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.17.2] - 2026-06-01
+
+### Fixed
+
+- 修复媒体排序保存后不生效的问题（拖拽排序仅更新 media.order_index，未同步更新 collection_blocks.media_ids，导致刷新/发布后排序恢复原样）
+- 修复媒体排序保存提示"草稿保存失败"的问题（fetch 请求缺少 Accept: application/json 头，服务端返回 HTML 而非 JSON；block update 请求改用 application/x-www-form-urlencoded 格式确保 media_ids 正确解析）
+- 媒体排序拖拽结束后自动保存，无需手动点击保存按钮
+
 ## [2.17.1] - 2026-06-01
 
 ### Fixed

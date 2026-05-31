@@ -136,26 +136,43 @@
         var order = items.map(function(item) { return Number(item.dataset.id); });
         var statusEl = blockList.querySelector('.block-order-status[data-block-id="' + blockId + '"]');
 
-        fetch('/admin/media/reorder', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfToken },
-            body: JSON.stringify({ order: order })
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data && data.success) {
-                if (statusEl) statusEl.textContent = t.orderSaved;
+        if (statusEl) { statusEl.textContent = t.orderAutoSaved || t.orderSaved; statusEl.classList.add('saving'); }
+
+        function handleRes(res) {
+            if (!res.ok) return res.text().then(function(txt) { throw new Error('HTTP ' + res.status + ': ' + txt); });
+            return res.json();
+        }
+
+        Promise.all([
+            fetch('/admin/media/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': _csrfToken },
+                body: JSON.stringify({ order: order })
+            }).then(handleRes),
+            fetch('/admin/collections/' + collectionId + '/blocks/' + blockId + '/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': 'application/json', 'X-CSRF-Token': _csrfToken },
+                body: 'media_ids=' + encodeURIComponent(JSON.stringify(order))
+            }).then(handleRes)
+        ])
+        .then(function(results) {
+            var allOk = results.every(function(data) { return data && data.success; });
+            if (allOk) {
+                if (statusEl) { statusEl.textContent = t.orderSaved; statusEl.classList.remove('saving'); statusEl.classList.add('saved'); }
                 showPageNotice(t.orderSaved);
             } else {
-                if (statusEl) statusEl.textContent = t.saveFailed;
+                if (statusEl) { statusEl.textContent = t.saveFailed; statusEl.classList.remove('saving'); statusEl.classList.add('error'); }
                 showPageNotice(t.saveFailed, true);
             }
         })
-        .catch(function() {
-            if (statusEl) statusEl.textContent = t.draftSaveFailed;
+        .catch(function(err) {
+            console.error('[saveBlockMediaOrder]', err);
+            if (statusEl) { statusEl.textContent = t.draftSaveFailed; statusEl.classList.remove('saving'); statusEl.classList.add('error'); }
             showPageNotice(t.draftSaveFailed, true);
         });
     }
+
+    window.__saveBlockMediaOrder = saveBlockMediaOrder;
 
     function createBlockCardHtml(block) {
         var id = block.id;

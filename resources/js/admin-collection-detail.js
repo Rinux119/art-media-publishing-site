@@ -467,6 +467,10 @@
                     grid.querySelectorAll('.media-item').forEach(el => el.classList.remove('dragging'));
                     draggingElement = null;
                     updateDraftIndicator();
+                    const blockId = grid.dataset.blockId;
+                    if (blockId && window.__saveBlockMediaOrder) {
+                        window.__saveBlockMediaOrder(blockId);
+                    }
                 }
             });
 
