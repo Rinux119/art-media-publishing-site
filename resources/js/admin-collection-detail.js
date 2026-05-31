@@ -405,6 +405,29 @@
                 document.querySelectorAll('.js-async-form').forEach((form) => {
                     form.dataset.publishedValue = form.dataset.lastSavedValue || '';
                 });
+                const draftDeletedItems = mediaItems.filter((item) => item.dataset.isDraftDeleted === '1');
+                draftDeletedItems.forEach((item) => {
+                    const idx = mediaItems.indexOf(item);
+                    if (idx !== -1) mediaItems.splice(idx, 1);
+                    item.remove();
+                });
+                mediaItems.forEach((item) => {
+                    item.dataset.isPublished = '1';
+                    item.dataset.isDraftDeleted = '0';
+                    item.classList.remove('is-draft-deleted');
+                    const orderIndex = item.dataset.orderIndex || '0';
+                    item.dataset.publishedOrderIndex = orderIndex;
+                    const badge = item.querySelector('[data-role="draft-deleted-badge"]');
+                    if (badge) badge.remove();
+                    syncMediaUnpublishedBadge(item);
+                });
+                lastSavedMediaOrder = getMediaOrderIds().join(',');
+                updateDeleteSummary();
+                updateUnpublishedCount();
+                updateDraftIndicator();
+                updateMediaFilters();
+                setPublishStatus(t.collectionDetail.publishSuccess, 'saved');
+                showPageNotice(t.collectionDetail.publishSuccess);
             } catch (error) {
                 const message = error && error.message ? error.message : t.collectionDetail.publishFailed;
                 setPublishStatus(message, 'error');
@@ -440,7 +463,7 @@
             });
 
             if (mediaResultsCount) {
-                mediaResultsCount.textContent = t.collectionDetail.showingCount.replace('{{shown}}', visibleCount).replace('{{total}}', mediaItems.length);
+                mediaResultsCount.textContent = t.collectionDetail.showingMediaCount.replace('{{shown}}', visibleCount).replace('{{total}}', mediaItems.length);
             }
             if (mediaEmptyState) {
                 mediaEmptyState.style.display = visibleCount === 0 ? 'block' : 'none';

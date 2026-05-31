@@ -229,6 +229,10 @@ app.use((req, res, next) => {
 
 app.use(i18nMiddleware);
 
+app.get('/@vite/client', (req, res) => {
+    res.type('application/javascript').status(204).end();
+});
+
 function invalidateSiteConfigCache() {
     _siteConfigCache = null;
     _siteConfigCacheTime = 0;

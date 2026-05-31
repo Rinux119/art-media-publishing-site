@@ -104,7 +104,8 @@ const registerPublicRoutes = ({
             || slug === 'content'
             || slug === 'passwd'
             || slug === 'favicon.ico'
-            || slug === 'api';
+            || slug === 'api'
+            || slug === '@vite';
     };
 
     const renderNotFound = (req, res) => {
