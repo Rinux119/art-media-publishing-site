@@ -84,6 +84,7 @@
                 var card = blockList.querySelector('.block-card[data-block-id="' + blockId + '"]');
                 if (card) card.remove();
                 showPageNotice(t.blockDeleted);
+                document.dispatchEvent(new CustomEvent('draft-changed'));
             } else {
                 showPageNotice((data && data.error) || t.blockDeleteFailed, true);
             }
@@ -115,6 +116,7 @@
             if (data && data.success) {
                 if (statusEl) statusEl.textContent = t.draftSaved;
                 showPageNotice(t.textSaved);
+                document.dispatchEvent(new CustomEvent('draft-changed'));
             } else {
                 if (statusEl) statusEl.textContent = t.saveFailed;
                 showPageNotice(t.saveFailed, true);
@@ -154,6 +156,80 @@
         });
     }
 
+    function createBlockCardHtml(block) {
+        var id = block.id;
+        if (block.block_type === 'media') {
+            return '<div class="section block-card block-card-media" data-block-id="' + id + '" data-block-type="media" data-is-published="0" draggable="true">' +
+                '<div class="section-header">' +
+                    '<div class="block-card-header-left">' +
+                        '<span class="block-handle" title="' + t.dragToReorder + '">⠿</span>' +
+                        '<div><h2>' + t.mediaManagement + '</h2><p class="section-subtitle">' + t.mediaManagementHint + '</p></div>' +
+                    '</div>' +
+                    '<div class="block-card-header-right">' +
+                        '<button type="button" class="btn-toggle-collapse" data-block-id="' + id + '" title="' + t.collapseBlock + '">' +
+                            '<span class="collapse-icon-open">▾</span><span class="collapse-label-open">' + t.collapseBlock + '</span>' +
+                            '<span class="collapse-icon-closed">▸</span><span class="collapse-label-closed">' + t.expandBlock + '</span>' +
+                        '</button>' +
+                        '<span class="block-move-group">' +
+                            '<button type="button" class="btn-block-move btn-block-up" data-block-id="' + id + '" title="' + t.moveUp + '">' + t.moveUp + '</button>' +
+                            '<button type="button" class="btn-block-move btn-block-down" data-block-id="' + id + '" title="' + t.moveDown + '">' + t.moveDown + '</button>' +
+                        '</span>' +
+                        '<button type="button" class="btn-delete-block" data-block-id="' + id + '" title="' + t.deleteBlock + '">' + t.deleteBlock + '</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="block-card-body">' +
+                    '<div class="panel-soft">' +
+                        '<form class="block-upload-form toolbar-row" action="/admin/collections/' + collectionId + '/media/upload" method="POST" enctype="multipart/form-data" data-block-id="' + id + '">' +
+                            '<input type="hidden" name="_csrf" value="' + _csrfToken + '">' +
+                            '<input type="hidden" name="block_id" value="' + id + '">' +
+                            '<input type="file" name="media" accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.wmv,.flv" multiple required>' +
+                            '<button type="submit" class="btn-primary">' + t.startUpload + '</button>' +
+                        '</form>' +
+                    '</div>' +
+                    '<div class="block-upload-progress" style="display:none; margin-top: 0.75rem;">' +
+                        '<div class="block-upload-progress-text" style="font-size:12px;color:#666;margin-bottom:4px;">' + t.preparingUpload + '</div>' +
+                        '<div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;">' +
+                            '<div class="block-upload-progress-bar" style="width:0%;height:100%;background:#333;"></div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="media-grid block-media-grid" data-block-id="' + id + '"></div>' +
+                    '<div class="actions-right" style="margin-top: 16px;">' +
+                        '<span class="autosave-status block-order-status" data-block-id="' + id + '" aria-live="polite"></span>' +
+                        '<button type="button" class="btn-primary btn-save-block-order" data-block-id="' + id + '">' + t.saveOrder + '</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }
+        return '<div class="section block-card block-card-text" data-block-id="' + id + '" data-block-type="text" data-is-published="0" draggable="true">' +
+            '<div class="section-header">' +
+                '<div class="block-card-header-left">' +
+                    '<span class="block-handle" title="' + t.dragToReorder + '">⠿</span>' +
+                    '<div><h2>' + t.artistStatement + '</h2><p class="section-subtitle">' + t.reportPlaceholder + '</p></div>' +
+                '</div>' +
+                '<div class="block-card-header-right">' +
+                    '<button type="button" class="btn-toggle-collapse" data-block-id="' + id + '" title="' + t.collapseBlock + '">' +
+                        '<span class="collapse-icon-open">▾</span><span class="collapse-label-open">' + t.collapseBlock + '</span>' +
+                        '<span class="collapse-icon-closed">▸</span><span class="collapse-label-closed">' + t.expandBlock + '</span>' +
+                    '</button>' +
+                    '<span class="block-move-group">' +
+                        '<button type="button" class="btn-block-move btn-block-up" data-block-id="' + id + '" title="' + t.moveUp + '">' + t.moveUp + '</button>' +
+                        '<button type="button" class="btn-block-move btn-block-down" data-block-id="' + id + '" title="' + t.moveDown + '">' + t.moveDown + '</button>' +
+                    '</span>' +
+                    '<button type="button" class="btn-delete-block" data-block-id="' + id + '" title="' + t.deleteBlock + '">' + t.deleteBlock + '</button>' +
+                '</div>' +
+            '</div>' +
+            '<div class="block-card-body">' +
+                '<div class="block-text-editor">' +
+                    '<textarea name="markdown" placeholder="' + t.reportPlaceholder + '"></textarea>' +
+                    '<div class="block-text-actions">' +
+                        '<button type="button" class="btn-primary btn-save-text-block" data-block-id="' + id + '">' + t.saveText + '</button>' +
+                        '<span class="autosave-status" data-role="block-save-status"></span>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
     function addBlock(blockType) {
         fetch('/admin/collections/' + collectionId + '/blocks/add?json=1', {
             method: 'POST',
@@ -167,7 +243,13 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (data && data.success && data.block) {
-                location.reload();
+                var temp = document.createElement('div');
+                temp.innerHTML = createBlockCardHtml(data.block);
+                var newCard = temp.firstElementChild;
+                newCard.classList.add('is-collapsed');
+                blockList.appendChild(newCard);
+                updateMoveButtons();
+                document.dispatchEvent(new CustomEvent('draft-changed'));
             } else {
                 showPageNotice((data && data.error) || t.blockAddFailed, true);
             }
@@ -272,6 +354,7 @@
         .then(function(data) {
             if (data && data.success) {
                 showPageNotice(t.orderSaved);
+                document.dispatchEvent(new CustomEvent('draft-changed'));
             }
         })
         .catch(function() {});

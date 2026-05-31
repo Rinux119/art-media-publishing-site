@@ -177,6 +177,14 @@ if (blockColumns.length > 0) {
         db.exec("ALTER TABLE collection_blocks ADD COLUMN published_order_index INTEGER NOT NULL DEFAULT 0");
         db.exec("UPDATE collection_blocks SET published_order_index = order_index");
     }
+    if (!blockColumns.some((col) => col.name === 'is_published')) {
+        db.exec("ALTER TABLE collection_blocks ADD COLUMN is_published INTEGER NOT NULL DEFAULT 0");
+        db.exec("UPDATE collection_blocks SET is_published = 1");
+    }
+    if (!blockColumns.some((col) => col.name === 'is_deleted_draft')) {
+        db.exec("ALTER TABLE collection_blocks ADD COLUMN is_deleted_draft INTEGER NOT NULL DEFAULT 0");
+    }
+    db.exec("UPDATE collection_blocks SET is_deleted_draft = 0 WHERE is_deleted_draft IS NULL");
     const existingBlockCount = db.prepare('SELECT COUNT(*) AS count FROM collection_blocks').get();
     if (!existingBlockCount || existingBlockCount.count === 0) {
         const collectionsForBlocks = db.prepare('SELECT id, report_markdown, published_report_markdown FROM collections').all();

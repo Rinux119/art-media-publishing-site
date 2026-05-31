@@ -13,7 +13,7 @@
         <% const videoCount = media.filter((m) => !!m.isVideo).length; %>
         <% const reportedCount = media.filter((m) => typeof m.report_markdown === 'string' && m.report_markdown.trim()).length; %>
         <% const unpublishedCount = media.filter((m) => !m.is_published || (m.report_markdown || '') !== (m.published_report_markdown || '')).length; %>
-        <% const hasPendingDraftChanges = ((collection.report_markdown || '') !== (collection.published_report_markdown || '') || media.some((m) => !m.is_published || !!m.is_deleted_draft || (m.report_markdown || '') !== (m.published_report_markdown || '') || Number(m.order_index || 0) !== Number(m.published_order_index || 0))); %>
+        <% const hasPendingDraftChanges = ((collection.report_markdown || '') !== (collection.published_report_markdown || '') || media.some((m) => !m.is_published || !!m.is_deleted_draft || (m.report_markdown || '') !== (m.published_report_markdown || '') || Number(m.order_index || 0) !== Number(m.published_order_index || 0)) || blocks.some((b) => !b.is_published || !!b.is_deleted_draft || (b.markdown || '') !== (b.published_markdown || '') || (b.media_ids || '[]') !== (b.published_media_ids || '[]') || Number(b.order_index || 0) !== Number(b.published_order_index || 0))); %>
         <div class="page-header">
             <div>
                 <a href="/admin" class="btn-link"><%= __('admin.settings.backToDashboard') %></a>
@@ -33,7 +33,7 @@
         <div id="block-list" class="block-list">
         <% blocks.forEach(function(block) { %>
             <% if (block.block_type === 'media') { %>
-                <div class="section block-card block-card-media" data-block-id="<%= block.id %>" data-block-type="media" draggable="true">
+                <div class="section block-card block-card-media" data-block-id="<%= block.id %>" data-block-type="media" data-is-published="<%= block.is_published ? '1' : '0' %>" draggable="true">
                     <div class="section-header">
                         <div class="block-card-header-left">
                             <span class="block-handle" title="<%= __('admin.collectionDetail.dragToReorder') %>">⠿</span>
@@ -83,7 +83,7 @@
                     </div>
                 </div>
             <% } else { %>
-                <div class="section block-card block-card-text" data-block-id="<%= block.id %>" data-block-type="text" draggable="true">
+                <div class="section block-card block-card-text" data-block-id="<%= block.id %>" data-block-type="text" data-is-published="<%= block.is_published ? '1' : '0' %>" draggable="true">
                     <div class="section-header">
                         <div class="block-card-header-left">
                             <span class="block-handle" title="<%= __('admin.collectionDetail.dragToReorder') %>">⠿</span>

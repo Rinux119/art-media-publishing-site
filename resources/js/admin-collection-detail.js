@@ -93,6 +93,8 @@
             if (hasReportDraftChanges) return true;
             const allMedia = getAllMediaItems();
             if (allMedia.some((item) => item.dataset.isPublished !== '1' || item.dataset.isDraftDeleted === '1')) return true;
+            const blockCards = Array.from(document.querySelectorAll('.block-card'));
+            if (blockCards.some((card) => card.dataset.isPublished !== '1')) return true;
             return false;
         };
         const updateDraftIndicator = () => {
@@ -101,6 +103,10 @@
             draftIndicator.textContent = hasPending ? t.collectionDetail.hasPendingChanges : t.collectionDetail.noPendingChanges;
             draftIndicator.classList.toggle('has-pending', hasPending);
         };
+
+        document.addEventListener('draft-changed', () => {
+            updateDraftIndicator();
+        });
 
         const collapseMediaItem = (item) => {
             if (!item) return;

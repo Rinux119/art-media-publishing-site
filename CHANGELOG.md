@@ -6,6 +6,23 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.14.2] - 2026-05-31
+
+### Fixed
+
+- 修复作品集管理中区块变更（更新阐述、新增/删除/调整区块顺序）未提示"有改动未发布"的问题
+- 为 `collection_blocks` 表新增 `is_published` 和 `is_deleted_draft` 字段，与 `media` 表保持一致
+- 区块删除改为软删除（`is_deleted_draft = 1`），发布时才真正清理
+- 后端 `has_pending_draft_changes` SQL 查询新增区块 `is_published = 0` 和 `is_deleted_draft = 1` 检测
+- 前端 `hasPendingDraftChanges` 函数新增区块 `data-is-published` 检测
+- 区块卡片添加 `data-is-published` 属性，供客户端实时判断发布状态
+- 区块删除、文本保存、顺序调整操作后派发 `draft-changed` 事件，实时更新草稿指示器
+
+### Changed
+
+- 新增区块改为客户端动态插入 DOM，避免页面刷新，新区块默认收起
+- 发布时同步设置区块 `is_published = 1` 并清理软删除区块
+
 ## [2.14.1] - 2026-05-31
 
 ### Fixed

@@ -333,6 +333,8 @@ const registerAdminRoutes = ({
                 OR EXISTS (SELECT 1 FROM media m WHERE m.collection_id = c.id AND m.is_deleted_draft = 1)
                 OR EXISTS (SELECT 1 FROM media m WHERE m.collection_id = c.id AND COALESCE(m.report_markdown, '') <> COALESCE(m.published_report_markdown, ''))
                 OR EXISTS (SELECT 1 FROM media m WHERE m.collection_id = c.id AND m.order_index <> m.published_order_index)
+                OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND b.is_published = 0)
+                OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND b.is_deleted_draft = 1)
                 OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND COALESCE(b.markdown, '') <> COALESCE(b.published_markdown, ''))
                 OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND COALESCE(b.media_ids, '[]') <> COALESCE(b.published_media_ids, '[]'))
                 OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND b.order_index <> b.published_order_index)
@@ -774,7 +776,7 @@ const registerAdminRoutes = ({
     app.get('/admin/collections/:id', requireAuth, (req, res) => {
         const collection = db.prepare('SELECT * FROM collections WHERE id = ?').get(req.params.id);
         const media = db.prepare('SELECT * FROM media WHERE collection_id = ? ORDER BY order_index ASC').all(req.params.id);
-        const blocks = db.prepare('SELECT * FROM collection_blocks WHERE collection_id = ? ORDER BY order_index ASC').all(req.params.id);
+        const blocks = db.prepare('SELECT * FROM collection_blocks WHERE collection_id = ? AND is_deleted_draft = 0 ORDER BY order_index ASC').all(req.params.id);
         const mediaItems = media.map((item) => {
             const isVideo = isVideoFile(item.filename);
             return {
@@ -947,11 +949,11 @@ const registerAdminRoutes = ({
             if (wantsJson(req)) return res.status(404).json({ success: false, error: 'Block not found' });
             return res.redirect('/admin');
         }
-        db.prepare('DELETE FROM collection_blocks WHERE id = ?').run(req.params.blockId);
+        db.prepare('UPDATE collection_blocks SET is_deleted_draft = 1 WHERE id = ?').run(req.params.blockId);
         const collection = db.prepare('SELECT slug FROM collections WHERE id = ?').get(req.params.id);
         if (collection && collection.slug) invalidateCachedData({ collectionId: req.params.id, collectionSlug: collection.slug });
         if (wantsJson(req)) {
-            return res.json({ success: true });
+            return res.json({ success: true, block: { id: Number(req.params.blockId), is_deleted_draft: 1 } });
         }
         return res.redirect(`/admin/collections/${req.params.id}`);
     });
@@ -1001,9 +1003,11 @@ const registerAdminRoutes = ({
                 SET
                     published_markdown = markdown,
                     published_media_ids = media_ids,
-                    published_order_index = order_index
+                    published_order_index = order_index,
+                    is_published = 1
                 WHERE collection_id = ?
             `).run(collectionId);
+            db.prepare('DELETE FROM collection_blocks WHERE collection_id = ? AND is_deleted_draft = 1').run(collectionId);
         });
         publishTransaction(collection.id);
         invalidateCachedData({ collectionId: collection.id, collectionSlug: collection.slug });
