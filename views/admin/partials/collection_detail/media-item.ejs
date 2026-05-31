@@ -8,6 +8,13 @@
                 <span class="expand-text-closed"><%= __('admin.collectionDetail.expandDescription') %></span>
                 <span class="expand-text-open"><%= __('admin.collectionDetail.collapseDescription') %></span>
             </button>
+            <button type="button" class="btn-draft-delete" data-id="<%= media.id %>">
+                <% if (media.is_deleted_draft) { %>
+                    <span class="draft-delete-label-restore"><%= __('admin.collectionDetail.restoreMedia') %></span>
+                <% } else { %>
+                    <span class="draft-delete-label-delete"><%= __('admin.collectionDetail.markDelete') %></span>
+                <% } %>
+            </button>
         </div>
     </div>
     <div class="media-card-preview">

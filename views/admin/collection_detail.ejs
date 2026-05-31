@@ -29,60 +29,105 @@
             </div>
         </div>
         <div id="page-notice" class="page-notice" role="status" aria-live="polite"></div>
-        <%- include('./partials/collection_detail/report-section', { collection }) %>
-        <%- include('./partials/collection_detail/upload-section', { collection }) %>
 
-        <div class="section">
-            <div class="section-header">
-                <div>
-                    <h2><%= __('admin.collectionDetail.mediaManagement') %></h2>
-                    <p class="section-subtitle"><%= __('admin.collectionDetail.mediaManagementHint') %></p>
+        <div id="block-list" class="block-list">
+        <% blocks.forEach(function(block) { %>
+            <% if (block.block_type === 'media') { %>
+                <div class="section block-card block-card-media" data-block-id="<%= block.id %>" data-block-type="media" draggable="true">
+                    <div class="section-header">
+                        <div class="block-card-header-left">
+                            <span class="block-handle" title="<%= __('admin.collectionDetail.dragToReorder') %>">⠿</span>
+                            <div>
+                                <h2><%= __('admin.collectionDetail.mediaManagement') %></h2>
+                                <p class="section-subtitle"><%= __('admin.collectionDetail.mediaManagementHint') %></p>
+                            </div>
+                        </div>
+                        <div class="block-card-header-right">
+                            <button type="button" class="btn-toggle-collapse" data-block-id="<%= block.id %>" title="<%= __('admin.collectionDetail.collapseBlock') %>">
+                                <span class="collapse-icon-open">▾</span><span class="collapse-label-open"><%= __('admin.collectionDetail.collapseBlock') %></span>
+                                <span class="collapse-icon-closed">▸</span><span class="collapse-label-closed"><%= __('admin.collectionDetail.expandBlock') %></span>
+                            </button>
+                            <span class="block-move-group">
+                                <button type="button" class="btn-block-move btn-block-up" data-block-id="<%= block.id %>" title="<%= __('admin.collectionDetail.moveUp') %>"><%= __('admin.collectionDetail.moveUp') %></button>
+                                <button type="button" class="btn-block-move btn-block-down" data-block-id="<%= block.id %>" title="<%= __('admin.collectionDetail.moveDown') %>"><%= __('admin.collectionDetail.moveDown') %></button>
+                            </span>
+                            <button type="button" class="btn-delete-block" data-block-id="<%= block.id %>" title="<%= __('admin.collectionDetail.deleteBlock') %>"><%= __('admin.collectionDetail.deleteBlock') %></button>
+                        </div>
+                    </div>
+                    <div class="block-card-body">
+                        <div class="panel-soft">
+                            <form class="block-upload-form toolbar-row" action="/admin/collections/<%= collection.id %>/media/upload" method="POST" enctype="multipart/form-data" data-block-id="<%= block.id %>">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <input type="hidden" name="block_id" value="<%= block.id %>">
+                                <input type="file" name="media" accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.wmv,.flv" multiple required>
+                                <button type="submit" class="btn-primary"><%= __('admin.collectionDetail.startUpload') %></button>
+                            </form>
+                        </div>
+                        <div class="block-upload-progress" style="display:none; margin-top: 0.75rem;">
+                            <div class="block-upload-progress-text" style="font-size:12px;color:#666;margin-bottom:4px;"><%= __('admin.collectionDetail.preparingUpload') %></div>
+                            <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;">
+                                <div class="block-upload-progress-bar" style="width:0%;height:100%;background:#333;"></div>
+                            </div>
+                        </div>
+                        <% const blockMediaIds = JSON.parse(block.media_ids || '[]'); %>
+                        <% const blockMediaItems = blockMediaIds.map(mid => media.find(m => m.id === mid)).filter(Boolean); %>
+                        <div class="media-grid block-media-grid" data-block-id="<%= block.id %>">
+                        <% blockMediaItems.forEach(function(m) { %>
+                            <%- include('./partials/collection_detail/media-item', { media: m, collection, csrfToken }) %>
+                        <% }); %>
+                        </div>
+                        <div class="actions-right" style="margin-top: 16px;">
+                            <span class="autosave-status block-order-status" data-block-id="<%= block.id %>" aria-live="polite"></span>
+                            <button type="button" class="btn-primary btn-save-block-order" data-block-id="<%= block.id %>"><%= __('admin.collectionDetail.saveOrder') %></button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="toolbar-box">
-                <div class="toolbar-row">
-                    <input id="media-search" type="text" placeholder="<%= __('admin.collectionDetail.searchFilename') %>">
-                    <select id="media-type-filter">
-                        <option value=""><%= __('admin.collectionDetail.allMedia') %></option>
-                        <option value="image"><%= __('admin.collectionDetail.images') %></option>
-                        <option value="video"><%= __('admin.collectionDetail.videos') %></option>
-                    </select>
-                    <select id="media-report-filter">
-                        <option value=""><%= __('admin.collectionDetail.allReportStatus') %></option>
-                        <option value="reported"><%= __('admin.collectionDetail.reported') %></option>
-                        <option value="empty"><%= __('admin.collectionDetail.noDescription') %></option>
-                    </select>
-                    <button id="clear-media-filters" type="button"><%= __('admin.dashboard.clearFilters') %></button>
+            <% } else { %>
+                <div class="section block-card block-card-text" data-block-id="<%= block.id %>" data-block-type="text" draggable="true">
+                    <div class="section-header">
+                        <div class="block-card-header-left">
+                            <span class="block-handle" title="<%= __('admin.collectionDetail.dragToReorder') %>">⠿</span>
+                            <div>
+                                <h2><%= __('admin.collectionDetail.artistStatement') %></h2>
+                                <p class="section-subtitle"><%= __('admin.collectionDetail.reportPlaceholder') %></p>
+                            </div>
+                        </div>
+                        <div class="block-card-header-right">
+                            <button type="button" class="btn-toggle-collapse" data-block-id="<%= block.id %>" title="<%= __('admin.collectionDetail.collapseBlock') %>">
+                                <span class="collapse-icon-open">▾</span><span class="collapse-label-open"><%= __('admin.collectionDetail.collapseBlock') %></span>
+                                <span class="collapse-icon-closed">▸</span><span class="collapse-label-closed"><%= __('admin.collectionDetail.expandBlock') %></span>
+                            </button>
+                            <span class="block-move-group">
+                                <button type="button" class="btn-block-move btn-block-up" data-block-id="<%= block.id %>" title="<%= __('admin.collectionDetail.moveUp') %>"><%= __('admin.collectionDetail.moveUp') %></button>
+                                <button type="button" class="btn-block-move btn-block-down" data-block-id="<%= block.id %>" title="<%= __('admin.collectionDetail.moveDown') %>"><%= __('admin.collectionDetail.moveDown') %></button>
+                            </span>
+                            <button type="button" class="btn-delete-block" data-block-id="<%= block.id %>" title="<%= __('admin.collectionDetail.deleteBlock') %>"><%= __('admin.collectionDetail.deleteBlock') %></button>
+                        </div>
+                    </div>
+                    <div class="block-card-body">
+                        <div class="block-text-editor">
+                            <textarea name="markdown" placeholder="<%= __('admin.collectionDetail.reportPlaceholder') %>"><%= block.markdown || '' %></textarea>
+                            <div class="block-text-actions">
+                                <button type="button" class="btn-primary btn-save-text-block" data-block-id="<%= block.id %>"><%= __('admin.collectionDetail.saveText') %></button>
+                                <span class="autosave-status" data-role="block-save-status"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="toolbar-meta">
-                    <span id="media-results-count"><%= __('admin.collectionDetail.showingMediaCount', { shown: totalMediaCount, total: totalMediaCount }) %></span>
-                    <span id="media-delete-count"><%= __('admin.collectionDetail.pendingDeleteCount', { count: 0 }) %></span>
-                    <span class="toolbar-note"><%= __('admin.collectionDetail.sortBeforeClearMedia') %></span>
-                </div>
-            </div>
-
-            <div class="controls">
-                <div class="actions-right manage-actions">
-                    <button id="toggle-manage-mode" class="btn-delete-selected" type="button"><%= __('admin.collectionDetail.manageMedia') %></button>
-                </div>
-            </div>
-
-            <div class="media-grid" id="media-grid">
-            <% media.forEach(function(media) { %>
-                <%- include('./partials/collection_detail/media-item', { media, collection }) %>
-            <% }); %>
-            </div>
-            <div id="media-empty-state" class="empty-state"><%= __('admin.collectionDetail.noMatchMedia') %></div>
-            <div class="actions-right" style="margin-top: 16px;">
-                <span id="media-order-status" class="autosave-status" aria-live="polite"></span>
-                <button id="save-media-order" class="btn-primary"><%= __('admin.collectionDetail.saveOrder') %></button>
-            </div>
+            <% } %>
+        <% }); %>
         </div>
+
+        <div class="block-add-bar">
+            <button type="button" id="add-text-block" class="btn-add-block"><%= __('admin.collectionDetail.addTextBlock') %></button>
+            <button type="button" id="add-media-block" class="btn-add-block" style="<%= collection.display_type === 'report' ? '' : 'display:none;' %>"><%= __('admin.collectionDetail.addMediaBlock') %></button>
+        </div>
+
         <%- include('./partials/collection_detail/draft-panel', { hasPendingDraftChanges }) %>
     </div>
 
     <script>window.__i18n = <%- JSON.stringify(__catalog) %>;</script>
     <script src="<%= assetUrl('/resources/js/admin-collection-detail.js') %>"></script>
+    <script src="<%= assetUrl('/resources/js/admin-block-editor.js') %>"></script>
 </body>
 </html>

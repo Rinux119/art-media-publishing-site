@@ -2,40 +2,23 @@
         const t = window.__i18n.admin;
         const _csrfMeta = document.querySelector('meta[name="csrf-token"]');
         const _csrfToken = _csrfMeta ? _csrfMeta.content : '';
-        const mediaUploadForm = document.getElementById('media-upload-form');
-        const mediaUploadInput = document.getElementById('media-upload-input');
-        const grid = document.getElementById('media-grid');
-        const uploadProgress = document.getElementById('upload-progress');
-        const uploadProgressBar = document.getElementById('upload-progress-bar');
-        const uploadProgressText = document.getElementById('upload-progress-text');
-        const processingProgress = document.getElementById('processing-progress');
-        const processingProgressBar = document.getElementById('processing-progress-bar');
-        const processingProgressText = document.getElementById('processing-progress-text');
-        const mediaSearchInput = document.getElementById('media-search');
-        const mediaTypeFilter = document.getElementById('media-type-filter');
-        const mediaReportFilter = document.getElementById('media-report-filter');
-        const clearMediaFiltersButton = document.getElementById('clear-media-filters');
-        const mediaResultsCount = document.getElementById('media-results-count');
-        const mediaDeleteCount = document.getElementById('media-delete-count');
-        const mediaEmptyState = document.getElementById('media-empty-state');
-        const reportedCountEl = document.getElementById('reported-count');
-        const unpublishedCountEl = document.getElementById('unpublished-count');
-        const saveMediaOrderButton = document.getElementById('save-media-order');
-        const toggleManageModeButton = document.getElementById('toggle-manage-mode');
-        const mediaOrderStatus = document.getElementById('media-order-status');
         const publishUpdatesButton = document.getElementById('publish-updates-button');
         const publishStatus = document.getElementById('publish-status');
         const draftIndicator = document.getElementById('draft-indicator');
         const pageNotice = document.getElementById('page-notice');
         const collectionRoot = document.getElementById('collection-detail-page');
         const collectionId = collectionRoot ? collectionRoot.dataset.collectionId : '';
-        const mediaItems = grid ? Array.from(grid.querySelectorAll('.media-item')) : [];
-        let draggingElement = null;
         let noticeTimer = null;
-        let isMediaOrderSaving = false;
-        let pendingMediaOrderSave = false;
         let isPublishingUpdates = false;
-        let isManageMode = false;
+
+        function getAllMediaItems() {
+            return Array.from(document.querySelectorAll('.media-item'));
+        }
+
+        function getGridForBlock(blockId) {
+            return document.querySelector('.block-media-grid[data-block-id="' + blockId + '"]');
+        }
+
         const showPageNotice = (message, isError = false) => {
             if (!pageNotice) return;
             pageNotice.textContent = message;
@@ -47,34 +30,16 @@
             }, 2200);
         };
 
-        const hasActiveMediaFilter = () => !!(
-            (mediaSearchInput && mediaSearchInput.value.trim()) ||
-            (mediaTypeFilter && mediaTypeFilter.value) ||
-            (mediaReportFilter && mediaReportFilter.value)
-        );
-
-        const updateDeleteSummary = () => {
-            if (!mediaDeleteCount) return;
-            const deleteCount = mediaItems.filter((item) => item.dataset.isDraftDeleted === '1').length;
-            mediaDeleteCount.textContent = t.collectionDetail.pendingDeleteCount.replace('{{count}}', deleteCount);
-        };
-        const setManageMode = (enabled) => {
-            isManageMode = !!enabled;
-            if (grid) grid.classList.toggle('is-manage-mode', isManageMode);
-            if (toggleManageModeButton) {
-                toggleManageModeButton.textContent = isManageMode ? t.collectionDetail.exitManage : t.collectionDetail.manageMedia;
-            }
-            showPageNotice(isManageMode ? t.collectionDetail.enteredManageMode : t.collectionDetail.exitedManageMode);
-        };
-
         const updateReportedCount = () => {
+            const reportedCountEl = document.getElementById('reported-count');
             if (!reportedCountEl) return;
-            const count = mediaItems.filter((item) => item.dataset.hasReport === '1').length;
+            const count = getAllMediaItems().filter((item) => item.dataset.hasReport === '1').length;
             reportedCountEl.textContent = String(count);
         };
         const updateUnpublishedCount = () => {
+            const unpublishedCountEl = document.getElementById('unpublished-count');
             if (!unpublishedCountEl) return;
-            const count = mediaItems.filter((item) => {
+            const count = getAllMediaItems().filter((item) => {
                 return item.dataset.isPublished !== '1' || getMediaUnpublishedKind(item) === 'report';
             }).length;
             unpublishedCountEl.textContent = String(count);
@@ -114,15 +79,6 @@
             }
             badge.textContent = kind === 'media' ? t.collectionDetail.mediaUnpublished : t.collectionDetail.reportUnpublished;
         };
-        const getPublishedOrderIds = () => mediaItems
-            .slice()
-            .sort((a, b) => {
-                const orderA = Number(a.dataset.publishedOrderIndex || 0);
-                const orderB = Number(b.dataset.publishedOrderIndex || 0);
-                if (orderA !== orderB) return orderA - orderB;
-                return Number(a.dataset.id || 0) - Number(b.dataset.id || 0);
-            })
-            .map((item) => item.dataset.id);
         const hasPendingDraftChanges = () => {
             const reportForms = Array.from(document.querySelectorAll('.js-async-form'));
             const hasReportDraftChanges = reportForms.some((form) => {
@@ -135,8 +91,9 @@
                 return currentValue !== publishedValue;
             });
             if (hasReportDraftChanges) return true;
-            if (mediaItems.some((item) => item.dataset.isPublished !== '1' || item.dataset.isDraftDeleted === '1')) return true;
-            return getMediaOrderIds().join(',') !== getPublishedOrderIds().join(',');
+            const allMedia = getAllMediaItems();
+            if (allMedia.some((item) => item.dataset.isPublished !== '1' || item.dataset.isDraftDeleted === '1')) return true;
+            return false;
         };
         const updateDraftIndicator = () => {
             if (!draftIndicator) return;
@@ -152,9 +109,12 @@
 
         const expandMediaItem = (item) => {
             if (!item) return;
-            mediaItems.forEach((other) => {
-                if (other !== item) collapseMediaItem(other);
-            });
+            const grid = item.closest('.media-grid');
+            if (grid) {
+                grid.querySelectorAll('.media-item').forEach((other) => {
+                    if (other !== item) collapseMediaItem(other);
+                });
+            }
             item.classList.add('is-expanded');
         };
 
@@ -165,12 +125,6 @@
             statusEl.textContent = message || '';
             statusEl.classList.toggle('is-saving', state === 'saving');
             statusEl.classList.toggle('is-error', state === 'error');
-        };
-        const setMediaOrderStatus = (message, state) => {
-            if (!mediaOrderStatus) return;
-            mediaOrderStatus.textContent = message || '';
-            mediaOrderStatus.classList.toggle('is-saving', state === 'saving');
-            mediaOrderStatus.classList.toggle('is-error', state === 'error');
         };
         const setPublishStatus = (message, state) => {
             if (!publishStatus) return;
@@ -194,7 +148,14 @@
                 }
                 if (!isDeleted && badge) badge.remove();
             }
-            updateDeleteSummary();
+            const deleteBtn = mediaItem.querySelector('.btn-draft-delete');
+            if (deleteBtn) {
+                if (isDeleted) {
+                    deleteBtn.innerHTML = '<span class="draft-delete-label-restore">' + t.collectionDetail.restoreMedia + '</span>';
+                } else {
+                    deleteBtn.innerHTML = '<span class="draft-delete-label-delete">' + t.collectionDetail.markDelete + '</span>';
+                }
+            }
             updateDraftIndicator();
         };
         const toggleDraftDelete = async (mediaItem) => {
@@ -297,7 +258,6 @@
 
                 form.dataset.lastSavedValue = currentValue;
                 updateReportFormUI(form);
-                updateMediaFilters();
                 updateDraftIndicator();
                 setAutosaveStatus(form, t.collectionDetail.draftAutoSaved, 'saved');
                 if (!isAuto) showPageNotice(t.collectionDetail.textSaved);
@@ -319,68 +279,7 @@
                 }
             }
         };
-        const getMediaOrderIds = () => [...grid.querySelectorAll('.media-item')].map(item => item.dataset.id);
-        let lastSavedMediaOrder = getMediaOrderIds().join(',');
-        const saveMediaOrder = async (options = {}) => {
-            if (!grid) return false;
-            const isAuto = !!options.auto;
-            if (hasActiveMediaFilter()) {
-                if (!isAuto) {
-                    alert(t.collectionDetail.clearFiltersBeforeSaveOrder);
-                }
-                return false;
-            }
-            const ids = getMediaOrderIds();
-            const serializedOrder = ids.join(',');
-            if (serializedOrder === lastSavedMediaOrder) {
-                if (isAuto) setMediaOrderStatus(t.collectionDetail.orderSaved, 'saved');
-                return true;
-            }
-            if (isMediaOrderSaving) {
-                pendingMediaOrderSave = true;
-                return false;
-            }
 
-            isMediaOrderSaving = true;
-            pendingMediaOrderSave = false;
-            if (saveMediaOrderButton) {
-                saveMediaOrderButton.disabled = true;
-                saveMediaOrderButton.textContent = t.collectionDetail.saving;
-            }
-            setMediaOrderStatus(isAuto ? t.collectionDetail.detectingOrderChange : '', 'saving');
-            try {
-                const response = await fetch('/admin/media/reorder', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfToken },
-                    body: JSON.stringify({ order: ids })
-                });
-                const data = await response.json();
-                if (!response.ok || !data || !data.success) {
-                    throw new Error((data && data.error) ? data.error : t.collectionDetail.draftOrderSaveFailed);
-                }
-                lastSavedMediaOrder = serializedOrder;
-                updateDraftIndicator();
-                setMediaOrderStatus(isAuto ? t.collectionDetail.orderAutoSaved : t.collectionDetail.orderSaved, 'saved');
-                if (!isAuto) showPageNotice(t.collectionDetail.orderSaved);
-                return true;
-            } catch (error) {
-                const message = error && error.message ? error.message : t.collectionDetail.draftOrderSaveFailed;
-                setMediaOrderStatus(isAuto ? t.collectionDetail.draftOrderAutoSaveFailed : message, 'error');
-                showPageNotice(message, true);
-                return false;
-            } finally {
-                isMediaOrderSaving = false;
-                if (saveMediaOrderButton) {
-                    saveMediaOrderButton.disabled = false;
-                    saveMediaOrderButton.textContent = t.collectionDetail.saveOrder;
-                }
-                if (pendingMediaOrderSave) {
-                    window.setTimeout(() => {
-                        saveMediaOrder({ auto: true });
-                    }, 0);
-                }
-            }
-        };
         const publishUpdates = async () => {
             if (isPublishingUpdates) return false;
             isPublishingUpdates = true;
@@ -405,27 +304,19 @@
                 document.querySelectorAll('.js-async-form').forEach((form) => {
                     form.dataset.publishedValue = form.dataset.lastSavedValue || '';
                 });
-                const draftDeletedItems = mediaItems.filter((item) => item.dataset.isDraftDeleted === '1');
-                draftDeletedItems.forEach((item) => {
-                    const idx = mediaItems.indexOf(item);
-                    if (idx !== -1) mediaItems.splice(idx, 1);
-                    item.remove();
-                });
-                mediaItems.forEach((item) => {
+                const allMedia = getAllMediaItems();
+                const draftDeletedItems = allMedia.filter((item) => item.dataset.isDraftDeleted === '1');
+                draftDeletedItems.forEach((item) => { item.remove(); });
+                allMedia.forEach((item) => {
                     item.dataset.isPublished = '1';
                     item.dataset.isDraftDeleted = '0';
                     item.classList.remove('is-draft-deleted');
-                    const orderIndex = item.dataset.orderIndex || '0';
-                    item.dataset.publishedOrderIndex = orderIndex;
                     const badge = item.querySelector('[data-role="draft-deleted-badge"]');
                     if (badge) badge.remove();
                     syncMediaUnpublishedBadge(item);
                 });
-                lastSavedMediaOrder = getMediaOrderIds().join(',');
-                updateDeleteSummary();
                 updateUnpublishedCount();
                 updateDraftIndicator();
-                updateMediaFilters();
                 setPublishStatus(t.collectionDetail.publishSuccess, 'saved');
                 showPageNotice(t.collectionDetail.publishSuccess);
             } catch (error) {
@@ -441,45 +332,14 @@
             }
         };
 
-        const updateMediaFilters = () => {
-            const keyword = ((mediaSearchInput && mediaSearchInput.value) || '').trim().toLowerCase();
-            const kind = (mediaTypeFilter && mediaTypeFilter.value) || '';
-            const reportState = (mediaReportFilter && mediaReportFilter.value) || '';
-            let visibleCount = 0;
-
-            mediaItems.forEach((item) => {
-                const name = item.dataset.name || '';
-                const itemKind = item.dataset.kind || '';
-                const hasReport = item.dataset.hasReport === '1';
-                const matchesKeyword = !keyword || name.includes(keyword);
-                const matchesKind = !kind || itemKind === kind;
-                const matchesReport = !reportState
-                    || (reportState === 'reported' && hasReport)
-                    || (reportState === 'empty' && !hasReport);
-                const visible = matchesKeyword && matchesKind && matchesReport;
-                item.style.display = visible ? '' : 'none';
-                if (!visible) collapseMediaItem(item);
-                if (visible) visibleCount += 1;
-            });
-
-            if (mediaResultsCount) {
-                mediaResultsCount.textContent = t.collectionDetail.showingMediaCount.replace('{{shown}}', visibleCount).replace('{{total}}', mediaItems.length);
-            }
-            if (mediaEmptyState) {
-                mediaEmptyState.style.display = visibleCount === 0 ? 'block' : 'none';
-            }
-        };
-
         const pollJob = (statusUrl, redirectUrl) => {
             if (!statusUrl) {
                 window.location.href = redirectUrl || window.location.href;
                 return;
             }
-            if (processingProgress && processingProgressBar && processingProgressText) {
-                processingProgress.style.display = 'block';
-                processingProgressBar.style.width = '0%';
-                processingProgressText.textContent = t.collectionDetail.waitingProcessing;
-            }
+            const processingProgress = document.getElementById('processing-progress');
+            const processingProgressBar = processingProgress ? processingProgress.querySelector('.block-upload-progress-bar, #processing-progress-bar') : null;
+            const processingProgressText = processingProgress ? processingProgress.querySelector('.block-upload-progress-text, #processing-progress-text') : null;
 
             let stopped = false;
             const tick = () => {
@@ -521,102 +381,7 @@
             setTimeout(tick, 500);
         };
 
-        if (mediaUploadForm && mediaUploadInput) {
-            mediaUploadForm.addEventListener('submit', (e) => {
-                const files = Array.from(mediaUploadInput.files || []);
-                const hasLargeFile = files.some(file => file.size > MAX_UPLOAD_FILE_SIZE_BYTES);
-                if (hasLargeFile) {
-                    e.preventDefault();
-                    alert(t.collectionDetail.uploadFailedSize);
-                    return;
-                }
-
-                if (window.FormData && window.XMLHttpRequest) {
-                    e.preventDefault();
-                    const formData = new FormData(mediaUploadForm);
-                    const xhr = new XMLHttpRequest();
-                    let url = mediaUploadForm.action || '';
-                    url += url.indexOf('?') === -1 ? '?json=1' : '&json=1';
-
-                    if (uploadProgress && uploadProgressBar && uploadProgressText) {
-                        uploadProgress.style.display = 'block';
-                        uploadProgressBar.style.width = '0%';
-                        uploadProgressText.textContent = t.collectionDetail.preparingUpload;
-                    }
-
-                    xhr.upload.onprogress = (ev) => {
-                        if (!ev.lengthComputable || !uploadProgressBar || !uploadProgressText) return;
-                        const percent = Math.max(0, Math.min(100, Math.round(ev.loaded * 100 / ev.total)));
-                        uploadProgressBar.style.width = percent + '%';
-                        uploadProgressText.textContent = t.collectionDetail.uploading.replace('{{percent}}', percent);
-                    };
-
-                    xhr.onreadystatechange = () => {
-                        if (xhr.readyState !== 4) return;
-                        let payload = null;
-                        const contentType = (xhr.getResponseHeader('Content-Type') || '').toLowerCase();
-                        try {
-                            payload = xhr.responseText ? JSON.parse(xhr.responseText) : null;
-                        } catch (_) {}
-
-                        if (xhr.status >= 200 && xhr.status < 300 && payload && payload.success) {
-                            if (uploadProgressBar && uploadProgressText) {
-                                uploadProgressBar.style.width = '100%';
-                                uploadProgressText.textContent = t.collectionDetail.uploadComplete;
-                            }
-                            pollJob(payload.statusUrl, payload.redirectUrl || window.location.href);
-                            return;
-                        }
-
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            if (xhr.responseURL && xhr.responseURL !== window.location.href) {
-                                window.location.href = xhr.responseURL;
-                                return;
-                            }
-                            if (contentType.includes('text/html')) {
-                                window.location.reload();
-                                return;
-                            }
-                        }
-
-                        if (uploadProgress && uploadProgressBar && uploadProgressText) {
-                            uploadProgressBar.style.width = '0%';
-                            uploadProgressText.textContent = t.collectionDetail.uploadFailed;
-                        }
-                        const msg = payload && payload.error ? payload.error : t.collectionDetail.uploadFailedStatus.replace('{{status}}', xhr.status);
-                        alert(msg);
-                    };
-
-                    xhr.onerror = () => {
-                        if (uploadProgress && uploadProgressBar && uploadProgressText) {
-                            uploadProgressBar.style.width = '0%';
-                            uploadProgressText.textContent = t.collectionDetail.uploadFailed;
-                        }
-                        alert(t.collectionDetail.uploadNetworkError);
-                    };
-
-                    xhr.open('POST', url, true);
-                    xhr.setRequestHeader('Accept', 'application/json');
-                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                    xhr.setRequestHeader('X-CSRF-Token', _csrfToken);
-                    xhr.send(formData);
-                }
-            });
-        }
-
-        if (mediaSearchInput) mediaSearchInput.addEventListener('input', updateMediaFilters);
-        if (mediaTypeFilter) mediaTypeFilter.addEventListener('change', updateMediaFilters);
-        if (mediaReportFilter) mediaReportFilter.addEventListener('change', updateMediaFilters);
-        if (clearMediaFiltersButton) {
-            clearMediaFiltersButton.addEventListener('click', () => {
-                if (mediaSearchInput) mediaSearchInput.value = '';
-                if (mediaTypeFilter) mediaTypeFilter.value = '';
-                if (mediaReportFilter) mediaReportFilter.value = '';
-                updateMediaFilters();
-            });
-        }
-
-        mediaItems.forEach((item) => {
+        document.querySelectorAll('.media-item').forEach((item) => {
             const expandButton = item.querySelector('.expand-media-btn');
             if (!expandButton) return;
             expandButton.addEventListener('click', () => {
@@ -668,86 +433,69 @@
             });
         });
 
-        updateMediaFilters();
-        updateDeleteSummary();
-        mediaItems.forEach(syncMediaUnpublishedBadge);
+        getAllMediaItems().forEach(syncMediaUnpublishedBadge);
         updateUnpublishedCount();
         updateDraftIndicator();
 
-        grid.addEventListener('dragstart', (e) => {
-            if (isManageMode || e.target.closest('textarea') || e.target.closest('button') || e.target.closest('form')) {
-                e.preventDefault();
-                return;
-            }
-            if (hasActiveMediaFilter()) {
-                e.preventDefault();
-                alert(t.collectionDetail.clearFiltersBeforeDrag);
-                return;
-            }
-            const item = e.target.closest('.media-item');
-            if (item) {
-                draggingElement = item;
-                setTimeout(() => {
-                    item.classList.add('dragging');
-                    grid.classList.add('is-dragging');
-                }, 0);
-            }
-        });
+        document.querySelectorAll('.block-media-grid').forEach((grid) => {
+            let draggingElement = null;
 
-        grid.addEventListener('dragend', (e) => {
-            const item = e.target.closest('.media-item');
-            if (item) {
-                item.classList.remove('dragging');
-                grid.classList.remove('is-dragging');
-                draggingElement = null;
-                grid.querySelectorAll('.media-item').forEach(el => el.classList.remove('dragging'));
-                const currentOrder = getMediaOrderIds().join(',');
-                updateDraftIndicator();
-                if (currentOrder !== lastSavedMediaOrder) {
-                    saveMediaOrder({ auto: true });
+            grid.addEventListener('dragstart', (e) => {
+                if (e.target.closest('textarea') || e.target.closest('button') || e.target.closest('form')) {
+                    e.preventDefault();
+                    return;
                 }
-            }
-        });
-
-        grid.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            if (!draggingElement) return;
-
-            const target = e.target.closest('.media-item');
-            if (target && target !== draggingElement) {
-                const rect = target.getBoundingClientRect();
-                const mouseX = e.clientX;
-                const mouseY = e.clientY;
-                
-                const isAfter = (mouseX - rect.left) > (rect.width / 2);
-                
-                if (isAfter) {
-                    grid.insertBefore(draggingElement, target.nextSibling);
-                } else {
-                    grid.insertBefore(draggingElement, target);
+                const item = e.target.closest('.media-item');
+                if (item) {
+                    draggingElement = item;
+                    setTimeout(() => {
+                        item.classList.add('dragging');
+                    }, 0);
                 }
-            }
+            });
+
+            grid.addEventListener('dragend', (e) => {
+                const item = e.target.closest('.media-item');
+                if (item) {
+                    item.classList.remove('dragging');
+                    grid.querySelectorAll('.media-item').forEach(el => el.classList.remove('dragging'));
+                    draggingElement = null;
+                    updateDraftIndicator();
+                }
+            });
+
+            grid.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (!draggingElement) return;
+                const target = e.target.closest('.media-item');
+                if (target && target !== draggingElement) {
+                    const rect = target.getBoundingClientRect();
+                    const isAfter = (e.clientX - rect.left) > (rect.width / 2);
+                    if (isAfter) {
+                        grid.insertBefore(draggingElement, target.nextSibling);
+                    } else {
+                        grid.insertBefore(draggingElement, target);
+                    }
+                }
+            });
+
+            grid.addEventListener('click', (e) => {
+                const draftDeleteBtn = e.target.closest('.btn-draft-delete');
+                if (draftDeleteBtn) {
+                    const item = draftDeleteBtn.closest('.media-item');
+                    if (item) toggleDraftDelete(item);
+                    return;
+                }
+                const item = e.target.closest('.media-item');
+                if (!item) return;
+                if (e.target.closest('textarea') || e.target.closest('button') || e.target.closest('form')) return;
+                if (item.classList.contains('is-draft-deleted')) {
+                    e.preventDefault();
+                    toggleDraftDelete(item);
+                }
+            });
         });
 
-        grid.addEventListener('click', (e) => {
-            if (!isManageMode) return;
-            const item = e.target.closest('.media-item');
-            if (!item) return;
-            if (e.target.closest('textarea') || e.target.closest('button') || e.target.closest('form')) return;
-            e.preventDefault();
-            toggleDraftDelete(item);
-        });
-
-        if (saveMediaOrderButton) {
-            saveMediaOrderButton.addEventListener('click', () => {
-                saveMediaOrder({ auto: false });
-            });
-        }
-        if (toggleManageModeButton) {
-            toggleManageModeButton.addEventListener('click', () => {
-                setManageMode(!isManageMode);
-            });
-        }
         if (publishUpdatesButton) {
             publishUpdatesButton.addEventListener('click', () => {
                 publishUpdates();

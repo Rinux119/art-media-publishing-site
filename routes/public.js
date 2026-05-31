@@ -175,6 +175,8 @@ const registerPublicRoutes = ({
             : (indexDisplayTypeRaw === 'video' ? 'video' : 'single');
         const indexImageLeft = settings.indexImageLeft || indexImage;
         const indexImageRight = settings.indexImageRight || '';
+        const easterEggForce = req.query && req.query.egg_test === '1';
+
         try {
             return await sendHtmlWithCache(req, res, {
                 cacheKey: `page:${res.locals.locale}:${req.originalUrl}`,
@@ -184,7 +186,8 @@ const registerPublicRoutes = ({
                         indexImage,
                         indexDisplayType,
                         indexImageLeft,
-                        indexImageRight
+                        indexImageRight,
+                        easterEggForce
                     }, (err, html) => {
                         if (err) return reject(err);
                         return resolve(html);
@@ -267,6 +270,20 @@ const registerPublicRoutes = ({
             return mapped;
         });
 
+        const rawBlocks = db.prepare('SELECT id, block_type, published_markdown AS markdown, published_media_ids AS media_ids, published_order_index AS order_index FROM collection_blocks WHERE collection_id = ? AND (published_markdown != \'\' OR published_media_ids != \'[]\') ORDER BY published_order_index ASC').all(collection.id);
+        const mediaMap = new Map(processedMedia.map((m) => [m.id, m]));
+        const blocks = rawBlocks.map((block) => {
+            if (block.block_type === 'media') {
+                let ids = [];
+                try { ids = JSON.parse(block.media_ids || '[]'); } catch (_) { ids = []; }
+                const blockMedia = ids.map((id) => mediaMap.get(id)).filter(Boolean);
+                return { id: block.id, blockType: 'media', orderIndex: block.order_index, media: blockMedia };
+            } else {
+                const html = renderMarkdown(block.markdown || '');
+                return { id: block.id, blockType: 'text', orderIndex: block.order_index, markdown: block.markdown || '', html };
+            }
+        });
+
         try {
             return await sendHtmlWithCache(req, res, {
                 cacheKey: `page:${res.locals.locale}:${req.originalUrl}`,
@@ -277,6 +294,7 @@ const registerPublicRoutes = ({
                         displayType,
                         reportHtml,
                         media: processedMedia,
+                        blocks,
                         totalMediaCount: totalMediaCount,
                         currentPage: 1,
                         totalPages: 1,

@@ -333,6 +333,9 @@ const registerAdminRoutes = ({
                 OR EXISTS (SELECT 1 FROM media m WHERE m.collection_id = c.id AND m.is_deleted_draft = 1)
                 OR EXISTS (SELECT 1 FROM media m WHERE m.collection_id = c.id AND COALESCE(m.report_markdown, '') <> COALESCE(m.published_report_markdown, ''))
                 OR EXISTS (SELECT 1 FROM media m WHERE m.collection_id = c.id AND m.order_index <> m.published_order_index)
+                OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND COALESCE(b.markdown, '') <> COALESCE(b.published_markdown, ''))
+                OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND COALESCE(b.media_ids, '[]') <> COALESCE(b.published_media_ids, '[]'))
+                OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND b.order_index <> b.published_order_index)
               THEN 1 ELSE 0 END AS has_pending_draft_changes
             FROM collections c
             ORDER BY c.order_index ASC
@@ -343,6 +346,7 @@ const registerAdminRoutes = ({
             indexImageLeft,
             indexImageRight,
             collections,
+            easterEggTestUrl: '/?egg_test=1',
             recentVisits: getRecentVisits(10),
             visitStats: getVisitStats(),
             isAdmin: (() => { const u = db.prepare('SELECT username FROM users WHERE id = ?').get(req.session.userId); return u && u.username === 'admin'; })()
@@ -770,6 +774,7 @@ const registerAdminRoutes = ({
     app.get('/admin/collections/:id', requireAuth, (req, res) => {
         const collection = db.prepare('SELECT * FROM collections WHERE id = ?').get(req.params.id);
         const media = db.prepare('SELECT * FROM media WHERE collection_id = ? ORDER BY order_index ASC').all(req.params.id);
+        const blocks = db.prepare('SELECT * FROM collection_blocks WHERE collection_id = ? ORDER BY order_index ASC').all(req.params.id);
         const mediaItems = media.map((item) => {
             const isVideo = isVideoFile(item.filename);
             return {
@@ -777,7 +782,7 @@ const registerAdminRoutes = ({
                 isVideo
             };
         });
-        res.render('admin/collection_detail', { collection, media: mediaItems });
+        res.render('admin/collection_detail', { collection, media: mediaItems, blocks });
     });
 
     app.post('/admin/collections/:id/media/upload', requireAuth, (req, res, next) => {
@@ -796,9 +801,23 @@ const registerAdminRoutes = ({
 
         const maxOrder = db.prepare('SELECT MAX(order_index) as max FROM media WHERE collection_id = ?').get(req.params.id);
         let currentOrder = (maxOrder && maxOrder.max !== null) ? maxOrder.max + 1 : 0;
+        const newMediaIds = [];
         files.forEach((file) => {
-            insert.run(req.params.id, file.filename, file.originalname, currentOrder++);
+            const result = insert.run(req.params.id, file.filename, file.originalname, currentOrder++);
+            if (result.lastInsertRowid) newMediaIds.push(Number(result.lastInsertRowid));
         });
+
+        const blockId = req.body.block_id ? Number(req.body.block_id) : null;
+        if (blockId && newMediaIds.length > 0) {
+            const block = db.prepare('SELECT media_ids FROM collection_blocks WHERE id = ? AND collection_id = ?').get(blockId, req.params.id);
+            if (block) {
+                let existingIds = [];
+                try { existingIds = JSON.parse(block.media_ids || '[]'); } catch (_) { existingIds = []; }
+                if (!Array.isArray(existingIds)) existingIds = [];
+                const mergedIds = existingIds.concat(newMediaIds);
+                db.prepare('UPDATE collection_blocks SET media_ids = ? WHERE id = ?').run(JSON.stringify(mergedIds), blockId);
+            }
+        }
 
         const collectionSlug = req.params.collectionSlug;
         const isVideoProcessingReady = await ensureVideoProcessingAvailableForFiles({
@@ -870,6 +889,86 @@ const registerAdminRoutes = ({
         return res.json({ success: true });
     });
 
+    app.post('/admin/collections/:id/blocks/add', requireAuth, (req, res) => {
+        const collection = db.prepare('SELECT id, slug, display_type FROM collections WHERE id = ?').get(req.params.id);
+        if (!collection) {
+            if (wantsJson(req)) return res.status(404).json({ success: false, error: req.__('admin.collectionDetail.collectionNotExist') });
+            return res.redirect('/admin');
+        }
+        const blockType = (req.body.block_type === 'media') ? 'media' : 'text';
+        if (blockType === 'media' && collection.display_type !== 'report') {
+            if (wantsJson(req)) return res.status(400).json({ success: false, error: 'Media blocks can only be added in report mode' });
+            return res.redirect(`/admin/collections/${req.params.id}`);
+        }
+        const maxOrder = db.prepare('SELECT MAX(order_index) AS max FROM collection_blocks WHERE collection_id = ?').get(req.params.id);
+        const nextOrder = (maxOrder && maxOrder.max !== null) ? maxOrder.max + 1 : 0;
+        const insertBlock = db.prepare(`
+            INSERT INTO collection_blocks (collection_id, block_type, order_index, markdown, media_ids, published_markdown, published_media_ids)
+            VALUES (?, ?, ?, '', '[]', '', '[]')
+        `);
+        const result = insertBlock.run(req.params.id, blockType, nextOrder);
+        invalidateCachedData({ collectionId: collection.id, collectionSlug: collection.slug });
+        if (wantsJson(req)) {
+            return res.json({ success: true, block: { id: result.lastInsertRowid, block_type: blockType, order_index: nextOrder } });
+        }
+        return res.redirect(`/admin/collections/${req.params.id}`);
+    });
+
+    app.post('/admin/collections/:id/blocks/:blockId/update', requireAuth, (req, res) => {
+        const block = db.prepare('SELECT * FROM collection_blocks WHERE id = ? AND collection_id = ?').get(req.params.blockId, req.params.id);
+        if (!block) {
+            if (wantsJson(req)) return res.status(404).json({ success: false, error: 'Block not found' });
+            return res.redirect('/admin');
+        }
+        if (block.block_type === 'text') {
+            const markdown = typeof req.body.markdown === 'string' ? req.body.markdown : '';
+            db.prepare('UPDATE collection_blocks SET markdown = ? WHERE id = ?').run(markdown, req.params.blockId);
+        } else if (block.block_type === 'media') {
+            let mediaIds = [];
+            try {
+                mediaIds = JSON.parse(typeof req.body.media_ids === 'string' ? req.body.media_ids : '[]');
+                if (!Array.isArray(mediaIds)) mediaIds = [];
+                mediaIds = mediaIds.map((id) => Number(id)).filter((id) => id > 0);
+            } catch (_) { mediaIds = []; }
+            db.prepare('UPDATE collection_blocks SET media_ids = ? WHERE id = ?').run(JSON.stringify(mediaIds), req.params.blockId);
+        }
+        const collection = db.prepare('SELECT slug FROM collections WHERE id = ?').get(req.params.id);
+        if (collection && collection.slug) invalidateCachedData({ collectionId: req.params.id, collectionSlug: collection.slug });
+        if (wantsJson(req)) {
+            const updated = db.prepare('SELECT * FROM collection_blocks WHERE id = ?').get(req.params.blockId);
+            return res.json({ success: true, block: updated });
+        }
+        return res.redirect(`/admin/collections/${req.params.id}`);
+    });
+
+    app.post('/admin/collections/:id/blocks/:blockId/delete', requireAuth, (req, res) => {
+        const block = db.prepare('SELECT * FROM collection_blocks WHERE id = ? AND collection_id = ?').get(req.params.blockId, req.params.id);
+        if (!block) {
+            if (wantsJson(req)) return res.status(404).json({ success: false, error: 'Block not found' });
+            return res.redirect('/admin');
+        }
+        db.prepare('DELETE FROM collection_blocks WHERE id = ?').run(req.params.blockId);
+        const collection = db.prepare('SELECT slug FROM collections WHERE id = ?').get(req.params.id);
+        if (collection && collection.slug) invalidateCachedData({ collectionId: req.params.id, collectionSlug: collection.slug });
+        if (wantsJson(req)) {
+            return res.json({ success: true });
+        }
+        return res.redirect(`/admin/collections/${req.params.id}`);
+    });
+
+    app.post('/admin/collections/:id/blocks/reorder', requireAuth, (req, res) => {
+        const { order } = req.body;
+        if (!Array.isArray(order)) return res.status(400).json({ success: false, error: 'Invalid order' });
+        const update = db.prepare('UPDATE collection_blocks SET order_index = ? WHERE id = ? AND collection_id = ?');
+        const transaction = db.transaction((items) => {
+            items.forEach((id, index) => update.run(index, id, req.params.id));
+        });
+        transaction(order);
+        const collection = db.prepare('SELECT slug FROM collections WHERE id = ?').get(req.params.id);
+        if (collection && collection.slug) invalidateCachedData({ collectionId: req.params.id, collectionSlug: collection.slug });
+        return res.json({ success: true });
+    });
+
     app.post('/admin/collections/:id/publish', requireAuth, (req, res) => {
         const collection = db.prepare('SELECT id, slug FROM collections WHERE id = ?').get(req.params.id);
         if (!collection) {
@@ -897,6 +996,14 @@ const registerAdminRoutes = ({
                     is_deleted_draft = 0
                 WHERE collection_id = ?
             `).run(collectionId);
+            db.prepare(`
+                UPDATE collection_blocks
+                SET
+                    published_markdown = markdown,
+                    published_media_ids = media_ids,
+                    published_order_index = order_index
+                WHERE collection_id = ?
+            `).run(collectionId);
         });
         publishTransaction(collection.id);
         invalidateCachedData({ collectionId: collection.id, collectionSlug: collection.slug });
@@ -921,42 +1028,7 @@ const registerAdminRoutes = ({
     app.get('/admin/settings', requireAuth, (req, res) => {
         const { loadSiteConfig } = require('../config');
         const config = loadSiteConfig(db);
-        const packageMeta = require('../package.json');
-
-        let ffmpegVersion = null;
-        try {
-            const { spawnSync } = require('child_process');
-            const vp = require('../videoProcessor');
-            const ffmpegPath = vp.getFfmpegPaths ? vp.getFfmpegPaths().ffmpeg : (process.env.FFMPEG_PATH || 'ffmpeg');
-            const spawnOpts = process.platform === 'win32' ? { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true } : { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] };
-            const result = spawnSync(ffmpegPath, ['-version'], spawnOpts);
-            if (result.status === 0) {
-                const match = (result.stdout || '').match(/ffmpeg version\s+([^\s]+)/);
-                ffmpegVersion = match ? match[1] : 'available';
-            }
-        } catch (_) {}
-
-        let sharpVersion = null;
-        try {
-            sharpVersion = require('sharp/package.json').version;
-        } catch (_) {}
-
-        let sqliteVersion = null;
-        try {
-            sqliteVersion = require('better-sqlite3/package.json').version;
-        } catch (_) {}
-
-        res.render('admin/settings', {
-            config,
-            version: packageMeta.version,
-            license: packageMeta.license,
-            runtimeInfo: {
-                nodeVersion: process.version,
-                sqliteVersion: sqliteVersion ? `better-sqlite3@${sqliteVersion}` : null,
-                sharpVersion: sharpVersion ? `sharp@${sharpVersion}` : null,
-                ffmpegVersion: ffmpegVersion ? `ffmpeg ${ffmpegVersion}` : null
-            }
-        });
+        res.render('admin/settings', { config });
     });
 
     app.post('/admin/settings', requireAuth, (req, res) => {

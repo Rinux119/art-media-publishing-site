@@ -1,0 +1,52 @@
+<% if (resolvedDisplayType === 'report') { %>
+  <div class="report-layout">
+    <% blocks.forEach(function(block) { %>
+      <% if (block.blockType === 'media') { %>
+        <div class="collection-media-block">
+          <% if (block.media && block.media.length) { %>
+            <% const reportImageCount = block.media.length; %>
+            <% const reportColumnCount = reportImageCount <= 3 ? Math.max(1, reportImageCount) : Math.ceil(Math.sqrt(reportImageCount)); %>
+            <div class="report-gallery cols-<%= reportColumnCount %>">
+              <% block.media.forEach(function(mediaItem) { %>
+                <a class="report-gallery-link" href="<%= getLargeUrl(mediaItem) %>">
+                  <div class="media-item is-thumbnail">
+                    <% if (mediaItem.isVideo) { %>
+                      <video autoplay loop muted playsinline preload="metadata">
+                        <source src="<%= mediaItem.mediaUrl %>">
+                      </video>
+                    <% } else { %>
+                      <img src="<%= mediaItem.mediaUrl %>" alt="<%= mediaItem.original_name || collection.name %>" loading="lazy">
+                    <% } %>
+                  </div>
+                </a>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+      <% } else if (block.blockType === 'text') { %>
+        <% if (block.html) { %>
+          <div class="report-text"><%- block.html %></div>
+        <% } else { %>
+          <div class="report-empty"><%= __('public.noReport') %></div>
+        <% } %>
+      <% } %>
+    <% }); %>
+  </div>
+<% } else { %>
+  <% blocks.forEach(function(block) { %>
+    <% if (block.blockType === 'media') { %>
+      <div class="single-layout collection-media-block">
+        <div id="wall-grid" class="<%= gridClass %>" data-display-type="<%= resolvedDisplayType %>" data-collection-slug="<%= collection.slug %>"></div>
+      </div>
+      <div id="wall-loading" class="wall-loading" data-batch-size="<%= wallBatchSize || 20 %>" data-all-loaded-text="<%= __('public.allLoaded') %>"><%= __('public.loadingMore') %></div>
+    <% } else if (block.blockType === 'text') { %>
+      <div class="report-layout">
+        <% if (block.html) { %>
+          <div class="report-text"><%- block.html %></div>
+        <% } else { %>
+          <div class="report-empty"><%= __('public.noReport') %></div>
+        <% } %>
+      </div>
+    <% } %>
+  <% }); %>
+<% } %>

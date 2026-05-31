@@ -108,6 +108,19 @@ db.exec(`
     UNIQUE(collection_id, filename)
   );
 
+  CREATE TABLE IF NOT EXISTS collection_blocks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    collection_id INTEGER NOT NULL,
+    block_type TEXT NOT NULL DEFAULT 'text',
+    order_index INTEGER NOT NULL DEFAULT 0,
+    markdown TEXT NOT NULL DEFAULT '',
+    media_ids TEXT NOT NULL DEFAULT '[]',
+    published_markdown TEXT NOT NULL DEFAULT '',
+    published_media_ids TEXT NOT NULL DEFAULT '[]',
+    published_order_index INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE CASCADE
+  );
+
 `);
 
 const userColumns = db.prepare("PRAGMA table_info('users')").all();
@@ -157,6 +170,42 @@ db.exec("UPDATE collections SET access_blocked = 0 WHERE access_blocked IS NULL"
 
 db.exec(`DROP TABLE IF EXISTS photos_new;`);
 db.exec(`DROP TABLE IF EXISTS media_new;`);
+
+const blockColumns = db.prepare("PRAGMA table_info('collection_blocks')").all();
+if (blockColumns.length > 0) {
+    if (!blockColumns.some((col) => col.name === 'published_order_index')) {
+        db.exec("ALTER TABLE collection_blocks ADD COLUMN published_order_index INTEGER NOT NULL DEFAULT 0");
+        db.exec("UPDATE collection_blocks SET published_order_index = order_index");
+    }
+    const existingBlockCount = db.prepare('SELECT COUNT(*) AS count FROM collection_blocks').get();
+    if (!existingBlockCount || existingBlockCount.count === 0) {
+        const collectionsForBlocks = db.prepare('SELECT id, report_markdown, published_report_markdown FROM collections').all();
+        const insertBlock = db.prepare(`
+            INSERT INTO collection_blocks (collection_id, block_type, order_index, markdown, media_ids, published_markdown, published_media_ids, published_order_index)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        const migrateBlocks = db.transaction((collections) => {
+            collections.forEach((col) => {
+                const mediaRows = db.prepare('SELECT id FROM media WHERE collection_id = ? ORDER BY order_index ASC, id ASC').all(col.id);
+                const mediaIdList = mediaRows.map((m) => m.id);
+                const publishedMediaRows = db.prepare('SELECT id FROM media WHERE collection_id = ? AND is_published = 1 ORDER BY published_order_index ASC, id ASC').all(col.id);
+                const publishedMediaIdList = publishedMediaRows.map((m) => m.id);
+
+                let orderIdx = 0;
+                insertBlock.run(col.id, 'media', orderIdx, '', JSON.stringify(mediaIdList), '', JSON.stringify(publishedMediaIdList), orderIdx);
+
+                const reportMd = col.report_markdown || '';
+                const publishedMd = col.published_report_markdown || '';
+                if (reportMd || publishedMd) {
+                    orderIdx++;
+                    insertBlock.run(col.id, 'text', orderIdx, reportMd, '[]', publishedMd, '[]', orderIdx);
+                }
+            });
+        });
+        migrateBlocks(collectionsForBlocks);
+        console.log('Migrated existing collections to block layout.');
+    }
+}
 
 const mediaColumns = db.prepare("PRAGMA table_info('media')").all();
 if (!mediaColumns.some((col) => col.name === 'report_markdown')) {
