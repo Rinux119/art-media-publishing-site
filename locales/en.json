@@ -117,7 +117,7 @@
       "needTwoIndexImages": "Please set two index images first"
     },
     "collectionDetail": {
-      "manageCollection": "Manage Collection: {{name}}",
+      "manageCollection": "Manage Collection: {{{name}}}",
       "collectionContentManagement": "Collection content management",
       "totalMedia": "Total Media",
       "images": "Images",

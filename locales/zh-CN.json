@@ -117,7 +117,7 @@
       "needTwoIndexImages": "请先设置两张首页图片"
     },
     "collectionDetail": {
-      "manageCollection": "管理作品集：{{name}}",
+      "manageCollection": "管理作品集：{{{name}}}",
       "collectionContentManagement": "作品集内容管理",
       "totalMedia": "总媒体",
       "images": "图片",

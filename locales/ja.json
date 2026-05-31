@@ -117,7 +117,7 @@
       "needTwoIndexImages": "先に2枚のホーム画像を設定してください"
     },
     "collectionDetail": {
-      "manageCollection": "コレクション管理：{{name}}",
+      "manageCollection": "コレクション管理：{{{name}}}",
       "collectionContentManagement": "コレクションコンテンツ管理",
       "totalMedia": "総メディア数",
       "images": "画像",
