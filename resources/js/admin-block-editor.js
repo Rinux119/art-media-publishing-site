@@ -310,6 +310,7 @@
     });
 
     blockList.addEventListener('dragstart', function(e) {
+        if (e.target.closest('.media-item')) return;
         if (!dragStartFromHandle) {
             e.preventDefault();
             return;
