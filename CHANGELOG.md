@@ -6,6 +6,17 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.17.0] - 2026-06-01
+
+### Changed
+
+- Works 导航由下拉选单改为展开导航，点击 Works 按钮后链接从右侧展开，横排排列，超出宽度自动换行
+- Works 导航展开/收起增加 clip-path + opacity 动画（展开 0.35s、收起 0.25s）
+
+### Fixed
+
+- 修复 Works 导航展开时按钮轻微跳动的问题（链接容器改为始终 display: flex，用 clip-path/opacity/pointer-events 控制可见性，避免 display 切换导致布局重算）
+
 ## [2.16.0] - 2026-05-31
 
 ### Added

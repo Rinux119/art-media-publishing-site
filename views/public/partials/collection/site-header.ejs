@@ -9,9 +9,9 @@
 </div>
 <% if (!shouldHideInfo) { %>
   <div id="collectionHeader">
-    <div class="works-dropdown">
+    <div class="works-nav">
       <button class="works-toggle textColor"><%= siteConfig.worksLabel || 'Works' %></button>
-      <div class="works-menu">
+      <div class="works-nav-links">
       <% collections.forEach(function(col) { %>
         <a href="/<%= col.slug %>" id="<%= col.slug %>"><%= col.name %></a>
       <% }); %>
@@ -21,15 +21,27 @@
 <% } %>
 <script>
 (function(){
-  var dd=document.querySelector('.works-dropdown');
-  var btn=dd&&dd.querySelector('.works-toggle');
-  if(!dd||!btn)return;
+  var nav=document.querySelector('.works-nav');
+  var btn=nav&&nav.querySelector('.works-toggle');
+  var links=nav&&nav.querySelector('.works-nav-links');
+  if(!nav||!btn)return;
+  function close(){
+    if(!nav.classList.contains('is-open'))return;
+    nav.classList.add('is-closing');
+    nav.classList.remove('is-open');
+  }
   btn.addEventListener('click',function(e){
     e.stopPropagation();
-    dd.classList.toggle('is-open');
+    if(nav.classList.contains('is-open')){
+      close();
+    }else{
+      nav.classList.remove('is-closing');
+      nav.classList.add('is-open');
+    }
   });
-  document.addEventListener('click',function(){
-    dd.classList.remove('is-open');
+  document.addEventListener('click',close);
+  if(links)links.addEventListener('animationend',function(){
+    nav.classList.remove('is-closing');
   });
 })();
 </script>
