@@ -6,6 +6,25 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.15.0] - 2026-05-31
+
+### Added
+
+- 首页导航栏新增 Works 下拉选单，点击展开/收起，点击外部区域自动关闭
+- 作品集页面导航改为与首页一致的 Works 下拉选单
+- 系统设置新增"作品目录标签"配置项（worksLabel），可自定义 Works 按钮文字，默认值为 "Works"
+- Works 选单样式：白色背景、虚线边框（与网站风格统一）
+
+### Fixed
+
+- 修复系统设置页面 Internal Server Error（模板引用了未定义的 version、license、runtimeInfo 变量）
+- 修复关于卡片数据库版本始终显示"未检测到"的问题（改用 `SELECT sqlite_version()` 替代 `PRAGMA compile_options`）
+- 修复关于卡片多语言键缺失导致显示原始键名的问题
+
+### Changed
+
+- 首页作品集标题由平铺链接改为 Works 下拉选单，改善多作品集时的布局
+
 ## [2.14.2] - 2026-05-31
 
 ### Fixed

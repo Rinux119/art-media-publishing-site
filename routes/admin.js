@@ -1029,10 +1029,21 @@ const registerAdminRoutes = ({
         });
     });
 
-    app.get('/admin/settings', requireAuth, (req, res) => {
+    const getSettingsRenderData = (db, extra) => {
         const { loadSiteConfig } = require('../config');
         const config = loadSiteConfig(db);
-        res.render('admin/settings', { config });
+        const pkg = require('../package.json');
+        const runtimeInfo = {
+            nodeVersion: process.version,
+            sqliteVersion: (() => { try { return db.prepare('SELECT sqlite_version() AS v').get().v; } catch(_) { return null; } })(),
+            sharpVersion: (() => { try { return 'sharp ' + (require('sharp').versions?.sharp || ''); } catch(_) { return null; } })(),
+            ffmpegVersion: (() => { try { const p = require('ffmpeg-static'); return p ? 'ffmpeg available' : null; } catch(_) { return null; } })()
+        };
+        return { config, version: pkg.version || '0.0.0', license: pkg.license || 'Unknown', runtimeInfo, ...extra };
+    };
+
+    app.get('/admin/settings', requireAuth, (req, res) => {
+        res.render('admin/settings', getSettingsRenderData(db));
     });
 
     app.post('/admin/settings', requireAuth, (req, res) => {
@@ -1042,6 +1053,7 @@ const registerAdminRoutes = ({
         const updates = {
             siteName: (body.siteName || '').trim(),
             siteTitle: (body.siteTitle || '').trim(),
+            worksLabel: (body.worksLabel || '').trim(),
             fullSignature: (body.fullSignature || '').trim(),
             shortSignature: (body.shortSignature || '').trim(),
             icpNumber: (body.icpNumber || '').trim(),
@@ -1083,17 +1095,13 @@ const registerAdminRoutes = ({
                 const config = loadSiteConfig(db);
                 return res.json({ success: true, message: req.__('admin.settings.settingsSaved'), language: config.language || '' });
             }
-            const { loadSiteConfig } = require('../config');
-            const config = loadSiteConfig(db);
-            res.render('admin/settings', { config, success: req.__('admin.settings.settingsSaved') });
+            res.render('admin/settings', getSettingsRenderData(db, { success: req.__('admin.settings.settingsSaved') }));
         } catch (err) {
             console.error('Failed to save site config:', err);
             if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('application/json') !== -1)) {
                 return res.json({ success: false, error: req.__('admin.settings.saveFailed', { message: err.message || '' }) });
             }
-            const { loadSiteConfig } = require('../config');
-            const config = loadSiteConfig(db);
-            res.render('admin/settings', { config, error: req.__('admin.settings.saveFailed', { message: err.message || '' }) });
+            res.render('admin/settings', getSettingsRenderData(db, { error: req.__('admin.settings.saveFailed', { message: err.message || '' }) }));
         }
     });
 

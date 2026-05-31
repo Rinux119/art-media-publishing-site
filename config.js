@@ -1,6 +1,7 @@
 const DEFAULTS = {
     siteName: 'Art Space',
     siteTitle: 'Art Space — Works',
+    worksLabel: 'Works',
     fullSignature: 'Art by Artist Name',
     shortSignature: 'Art by Artist Name',
     icpNumber: '',
@@ -25,6 +26,7 @@ const DEFAULTS = {
 const STRING_FIELDS = {
     site_name: 'siteName',
     site_title: 'siteTitle',
+    works_label: 'worksLabel',
     full_signature: 'fullSignature',
     short_signature: 'shortSignature',
     icp_number: 'icpNumber',
@@ -49,6 +51,7 @@ const NUMERIC_FIELDS = {
 const KEY_MAP = {
     siteName: 'site_name',
     siteTitle: 'site_title',
+    worksLabel: 'works_label',
     fullSignature: 'full_signature',
     shortSignature: 'short_signature',
     icpNumber: 'icp_number',
