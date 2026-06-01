@@ -6,6 +6,12 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.18.1] - 2026-06-01
+
+### Fixed
+
+- 系统设置关于卡片 ffmpeg 检测增加系统 PATH 回退：当 getFfmpegPaths() 返回的路径不存在时，spawnSync 尝试系统 PATH 中的 ffmpeg/ffprobe，确保设置页面显示状态与实际视频处理能力一致
+
 ## [2.18.0] - 2026-06-01
 
 ### Changed

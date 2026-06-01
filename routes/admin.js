@@ -1052,7 +1052,11 @@ const registerAdminRoutes = ({
                 const hasFfmpeg = paths.ffmpeg && fs.existsSync(paths.ffmpeg);
                 const hasFfprobe = paths.ffprobe && fs.existsSync(paths.ffprobe);
                 if (hasFfmpeg && hasFfprobe) return 'ffmpeg available';
-                if (hasFfmpeg) return 'ffmpeg available (ffprobe not found)';
+                const { spawnSync: _spawn } = require('child_process');
+                const sysFfmpeg = _spawn('ffmpeg', ['-version'], { stdio: 'ignore' }).status === 0;
+                const sysFfprobe = _spawn('ffprobe', ['-version'], { stdio: 'ignore' }).status === 0;
+                if (sysFfmpeg && sysFfprobe) return 'ffmpeg available';
+                if (sysFfmpeg || hasFfmpeg) return 'ffmpeg available (ffprobe not found)';
                 return null;
             })()
         };
