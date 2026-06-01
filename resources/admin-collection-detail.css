@@ -95,12 +95,24 @@
         .badge.unpublished { border-color: #d8c6a1; background: #fffaf0; color: #7b6130; }
         .badge.pending-delete { border-color: #c99595; color: #8b3a3a; background: #fff8f8; }
         .page-notice {
-            display: none;
-            margin: -4px 0 18px;
-            padding: 8px 10px;
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            padding: 10px 24px;
             border: 1px solid #d8d8d8;
+            border-radius: 6px;
             background: #fafafa;
             color: #666;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        .page-notice.is-visible {
+            opacity: 1;
+            pointer-events: auto;
         }
         .page-notice.is-error {
             border-color: #e1b9b9;

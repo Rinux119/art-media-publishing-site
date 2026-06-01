@@ -18,8 +18,9 @@
         if (!pageNotice) return;
         pageNotice.textContent = message;
         pageNotice.classList.toggle('is-error', !!isError);
-        pageNotice.style.display = 'block';
-        setTimeout(function() { pageNotice.style.display = 'none'; }, 2200);
+        pageNotice.classList.add('is-visible');
+        if (pageNotice._hideTimer) clearTimeout(pageNotice._hideTimer);
+        pageNotice._hideTimer = setTimeout(function() { pageNotice.classList.remove('is-visible'); }, 3500);
     }
 
     function getBlockCards() {
@@ -160,6 +161,7 @@
             if (allOk) {
                 if (statusEl) { statusEl.textContent = t.orderSaved; statusEl.classList.remove('saving'); statusEl.classList.add('saved'); }
                 showPageNotice(t.orderSaved);
+                document.dispatchEvent(new CustomEvent('draft-changed'));
             } else {
                 if (statusEl) { statusEl.textContent = t.saveFailed; statusEl.classList.remove('saving'); statusEl.classList.add('error'); }
                 showPageNotice(t.saveFailed, true);

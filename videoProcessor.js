@@ -195,24 +195,59 @@ const configureFfmpegBinaries = () => {
 configureFfmpegBinaries();
 
 const isFfmpegAvailable = () => {
-    if (ffmpegAvailable !== null) return ffmpegAvailable;
+    if (ffmpegAvailable !== null) return Promise.resolve(ffmpegAvailable);
 
     const isWin = process.platform === 'win32';
     const spawnOpts = isWin ? { stdio: 'ignore', windowsHide: true } : { stdio: 'ignore' };
 
-    const ffmpegResult = spawnSync(ffmpegProbe.ffmpegPath || 'ffmpeg', ['-version'], spawnOpts);
-    const ffprobeResult = spawnSync(ffmpegProbe.ffprobePath || 'ffprobe', ['-version'], spawnOpts);
+    const buildCandidates = (resolvedPath, fallbackName) => {
+        const paths = [];
+        if (resolvedPath && resolvedPath !== fallbackName) paths.push(resolvedPath);
+        paths.push(fallbackName);
+        return paths;
+    };
 
-    console.log(`[videoProcessor] ffmpeg -version: exit=${ffmpegResult.status}, error=${ffmpegResult.error ? ffmpegResult.error.message : 'none'}`);
-    console.log(`[videoProcessor] ffprobe -version: exit=${ffprobeResult.status}, error=${ffprobeResult.error ? ffprobeResult.error.message : 'none'}`);
+    const ffmpegPaths = buildCandidates(ffmpegProbe.ffmpegPath, 'ffmpeg');
+    const ffprobePaths = buildCandidates(ffmpegProbe.ffprobePath, 'ffprobe');
 
-    ffmpegAvailable = ffmpegResult.status === 0 && ffprobeResult.status === 0;
+    let ffmpegOk = false;
+    let ffprobeOk = false;
+    let ffmpegUsedPath = null;
+    let ffprobeUsedPath = null;
+
+    for (const p of ffmpegPaths) {
+        try {
+            const r = spawnSync(p, ['-version'], spawnOpts);
+            if (r.status === 0) { ffmpegOk = true; ffmpegUsedPath = p; break; }
+        } catch (_) {}
+    }
+
+    for (const p of ffprobePaths) {
+        try {
+            const r = spawnSync(p, ['-version'], spawnOpts);
+            if (r.status === 0) { ffprobeOk = true; ffprobeUsedPath = p; break; }
+        } catch (_) {}
+    }
+
+    if (ffmpegOk && ffmpegUsedPath && ffmpegUsedPath !== ffmpegProbe.ffmpegPath) {
+        console.log(`[videoProcessor] ffmpeg: resolved path "${ffmpegProbe.ffmpegPath}" failed, using "${ffmpegUsedPath}" instead`);
+        ffmpegProbe.ffmpegPath = ffmpegUsedPath;
+    }
+    if (ffprobeOk && ffprobeUsedPath && ffprobeUsedPath !== ffmpegProbe.ffprobePath) {
+        console.log(`[videoProcessor] ffprobe: resolved path "${ffmpegProbe.ffprobePath}" failed, using "${ffprobeUsedPath}" instead`);
+        ffmpegProbe.ffprobePath = ffprobeUsedPath;
+    }
+
+    console.log(`[videoProcessor] ffmpeg -version: ${ffmpegOk ? 'ok' : 'failed'}`);
+    console.log(`[videoProcessor] ffprobe -version: ${ffprobeOk ? 'ok' : 'failed'}`);
+
+    ffmpegAvailable = ffmpegOk && ffprobeOk;
     if (!ffmpegAvailable) {
         console.warn('FFmpeg/ffprobe not found; video compression is disabled.');
-        if (ffmpegResult.status === 0 && ffprobeResult.status !== 0) {
+        if (ffmpegOk && !ffprobeOk) {
             console.warn('  ffmpeg is available but ffprobe is NOT. Video processing requires both.');
         }
-        if (ffprobeResult.status === 0 && ffmpegResult.status !== 0) {
+        if (ffprobeOk && !ffmpegOk) {
             console.warn('  ffprobe is available but ffmpeg is NOT. Video processing requires both.');
         }
     }

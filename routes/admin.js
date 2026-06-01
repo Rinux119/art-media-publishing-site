@@ -1047,7 +1047,14 @@ const registerAdminRoutes = ({
             nodeVersion: process.version,
             sqliteVersion: (() => { try { return db.prepare('SELECT sqlite_version() AS v').get().v; } catch(_) { return null; } })(),
             sharpVersion: (() => { try { return 'sharp ' + (require('sharp').versions?.sharp || ''); } catch(_) { return null; } })(),
-            ffmpegVersion: (() => { try { const p = require('ffmpeg-static'); return p ? 'ffmpeg available' : null; } catch(_) { return null; } })()
+            ffmpegVersion: (() => {
+                const paths = videoProcessor.getFfmpegPaths();
+                const hasFfmpeg = paths.ffmpeg && fs.existsSync(paths.ffmpeg);
+                const hasFfprobe = paths.ffprobe && fs.existsSync(paths.ffprobe);
+                if (hasFfmpeg && hasFfprobe) return 'ffmpeg available';
+                if (hasFfmpeg) return 'ffmpeg available (ffprobe not found)';
+                return null;
+            })()
         };
         return { config, version: pkg.version || '0.0.0', license: pkg.license || 'Unknown', runtimeInfo, ...extra };
     };

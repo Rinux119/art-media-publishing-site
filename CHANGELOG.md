@@ -6,6 +6,19 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.18.0] - 2026-06-01
+
+### Changed
+
+- 通知栏改为固定定位 Toast 样式，不再占据文档流，消除页面跳动；添加淡入淡出动画（0.35s），滞留时间延长至 3.5 秒
+- 系统设置关于卡片 ffmpeg 检测改用 videoProcessor.getFfmpegPaths() + fs.existsSync，与实际视频处理使用相同路径
+
+### Fixed
+
+- 调整媒体顺序后正确提示"当前有未发布改动"（对比当前媒体顺序与 published_media_ids，保存/发布后同步更新客户端状态）
+- 发布后仍提示"当前有未发布改动"（发布成功后同步更新 data-published-media-ids）
+- FFmpeg 检测回退：当 resolveBinaryPath 返回的路径二进制损坏时，自动回退到系统 PATH（ffmpeg/ffprobe），并更新 ffmpegProbe 路径供后续视频处理使用
+
 ## [2.17.2] - 2026-06-01
 
 ### Fixed

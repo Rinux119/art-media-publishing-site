@@ -23,11 +23,11 @@
             if (!pageNotice) return;
             pageNotice.textContent = message;
             pageNotice.classList.toggle('is-error', !!isError);
-            pageNotice.style.display = 'block';
+            pageNotice.classList.add('is-visible');
             if (noticeTimer) window.clearTimeout(noticeTimer);
             noticeTimer = window.setTimeout(() => {
-                pageNotice.style.display = 'none';
-            }, 2200);
+                pageNotice.classList.remove('is-visible');
+            }, 3500);
         };
 
         const updateReportedCount = () => {
@@ -95,6 +95,14 @@
             if (allMedia.some((item) => item.dataset.isPublished !== '1' || item.dataset.isDraftDeleted === '1')) return true;
             const blockCards = Array.from(document.querySelectorAll('.block-card'));
             if (blockCards.some((card) => card.dataset.isPublished !== '1')) return true;
+            const mediaBlocks = blockCards.filter((card) => card.dataset.blockType === 'media');
+            if (mediaBlocks.some((card) => {
+                const grid = card.querySelector('.block-media-grid');
+                if (!grid) return false;
+                const currentIds = Array.from(grid.querySelectorAll('.media-item')).map((item) => String(item.dataset.id));
+                const publishedIds = JSON.parse(card.dataset.publishedMediaIds || '[]').map((id) => String(id));
+                return JSON.stringify(currentIds) !== JSON.stringify(publishedIds);
+            })) return true;
             return false;
         };
         const updateDraftIndicator = () => {
@@ -320,6 +328,14 @@
                     const badge = item.querySelector('[data-role="draft-deleted-badge"]');
                     if (badge) badge.remove();
                     syncMediaUnpublishedBadge(item);
+                });
+                document.querySelectorAll('.block-card-media').forEach((card) => {
+                    const grid = card.querySelector('.block-media-grid');
+                    if (grid) {
+                        const currentIds = Array.from(grid.querySelectorAll('.media-item')).map((item) => Number(item.dataset.id));
+                        card.dataset.publishedMediaIds = JSON.stringify(currentIds);
+                    }
+                    card.dataset.isPublished = '1';
                 });
                 updateUnpublishedCount();
                 updateDraftIndicator();

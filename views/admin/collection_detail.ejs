@@ -33,7 +33,7 @@
         <div id="block-list" class="block-list">
         <% blocks.forEach(function(block) { %>
             <% if (block.block_type === 'media') { %>
-                <div class="section block-card block-card-media" data-block-id="<%= block.id %>" data-block-type="media" data-is-published="<%= block.is_published ? '1' : '0' %>" draggable="true">
+                <div class="section block-card block-card-media" data-block-id="<%= block.id %>" data-block-type="media" data-is-published="<%= block.is_published ? '1' : '0' %>" data-published-media-ids="<%= block.published_media_ids || '[]' %>" draggable="true">
                     <div class="section-header">
                         <div class="block-card-header-left">
                             <span class="block-handle" title="<%= __('admin.collectionDetail.dragToReorder') %>">⠿</span>
