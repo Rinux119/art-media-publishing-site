@@ -60,7 +60,7 @@ if (process.env.TRUST_PROXY) {
 }
 
 const cdnUrl = process.env.CDN_URL || '';
-const cdnOrigin = cdnUrl ? new URL(cdnUrl).origin : null;
+const cdnOrigin = cdnUrl ? new URL(cdnUrl.startsWith('http') ? cdnUrl : `https://${cdnUrl}`).origin : null;
 
 app.use(helmet({
     hsts: process.env.NODE_ENV === 'production',
@@ -164,7 +164,7 @@ const {
     getRootMediaUrl,
     removeCollectionMediaAssets,
     removeRootMediaAssets
-} = createMediaPathHelpers({ contentRoot: CONTENT_ROOT, fs, path, cdnUrl });
+} = createMediaPathHelpers({ contentRoot: CONTENT_ROOT, fs, path, cdnUrl: cdnOrigin || '' });
 
 const getFileExt = (filename = '') => path.extname(filename).toLowerCase();
 const isImageFile = (filename = '') => IMAGE_EXTENSIONS.has(getFileExt(filename));
@@ -190,7 +190,7 @@ const {
     getCollectionMediaUrl,
     getRootImagesDir,
     getRootMediaUrl,
-    cdnUrl
+    cdnUrl: cdnOrigin || ''
 });
 
 const {

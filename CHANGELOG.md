@@ -6,6 +6,13 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.18.2] - 2026-06-01
+
+### Fixed
+
+- CDN_URL 环境变量支持无协议前缀写法（如 cdn.example.com），自动补全 https://
+- 修复 CDN 地址被当作相对路径拼接到当前域名下的问题，传入 public-site 的 cdnUrl 统一使用完整 origin（含协议）
+
 ## [2.18.1] - 2026-06-01
 
 ### Fixed
