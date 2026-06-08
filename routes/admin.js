@@ -1030,7 +1030,7 @@ const registerAdminRoutes = ({
 
     app.get('/admin/visitors', requireAuth, (req, res) => {
         const sort = req.query.sort === 'count' ? 'count' : 'date';
-        const visits = getVisitsSorted(sort, 200);
+        const visits = getVisitsSorted(sort, 500);
         const stats = getVisitStats();
         res.render('admin/visitors', {
             visits,
