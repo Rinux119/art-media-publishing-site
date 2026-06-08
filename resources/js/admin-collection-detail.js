@@ -461,10 +461,16 @@
 
         document.querySelectorAll('.block-media-grid').forEach((grid) => {
             let draggingElement = null;
+            let dragOriginInTextarea = false;
+
+            grid.addEventListener('mousedown', (e) => {
+                dragOriginInTextarea = !!e.target.closest('textarea') || !!e.target.closest('input');
+            });
 
             grid.addEventListener('dragstart', (e) => {
-                if (e.target.closest('textarea') || e.target.closest('button') || e.target.closest('form')) {
+                if (dragOriginInTextarea || e.target.closest('textarea') || e.target.closest('button') || e.target.closest('form') || e.target.closest('input')) {
                     e.preventDefault();
+                    dragOriginInTextarea = false;
                     return;
                 }
                 const item = e.target.closest('.media-item');

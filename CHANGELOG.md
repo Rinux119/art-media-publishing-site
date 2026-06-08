@@ -6,6 +6,14 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.19.1] - 2026-06-08
+
+### Fixed
+
+- Lightbox 大图查看中作品阐述不换行：前端 Markdown 渲染未启用时，原始文本的换行符被 HTML 合并为空格；marked 可用时补充 `breaks: true` 配置
+- Lightbox 大图查看右侧滚动条影响美观：隐藏 `.lightbox-report` 滚动条，保留滚动功能
+- 后台媒体排序拖拽与文字选择冲突：在 textarea/input 内拖选文字时会误触发媒体卡片排序拖拽，新增 mousedown 事件追踪拖拽来源，阻止输入区域内的拖拽行为
+
 ## [2.19.0] - 2026-06-08
 
 ### Added

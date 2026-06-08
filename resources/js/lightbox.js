@@ -21,8 +21,8 @@
 
   function renderMarkdown(src) {
     if (!src || !src.trim()) return '';
-    if (markedAvailable) return window.marked.parse(src);
-    return src;
+    if (markedAvailable) return window.marked.parse(src, { breaks: true, gfm: true });
+    return src.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
   }
 
   function createMediaEl(item) {
