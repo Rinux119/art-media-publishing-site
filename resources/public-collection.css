@@ -111,7 +111,7 @@
   .thumb-grid-diptych .media-item.diptych-thumb:focus-within img,
   .thumb-grid-diptych .media-item.diptych-thumb:focus-within video,
   .thumb-grid-diptych .media-item.diptych-thumb:focus-within canvas {
-    filter: brightness(0.7);
+    filter: brightness(0.8);
   }
   @media (hover: hover) {
     .thumb-grid-single .media-link:hover .media-item img,
@@ -123,7 +123,7 @@
     .thumb-grid-diptych .media-item.diptych-thumb:hover img,
     .thumb-grid-diptych .media-item.diptych-thumb:hover video,
     .thumb-grid-diptych .media-item.diptych-thumb:hover canvas {
-      filter: brightness(0.7);
+      filter: brightness(0.8);
     }
   }
   .thumb-grid-anthology-sub {
