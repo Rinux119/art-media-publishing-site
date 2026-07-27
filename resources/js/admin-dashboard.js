@@ -46,6 +46,7 @@
             if (type === 'diptych') return t.displayType.diptych;
             if (type === 'wall') return t.displayType.wall;
             if (type === 'report') return t.displayType.report;
+            if (type === 'anthology') return t.displayType.anthology;
             return t.displayType.single;
         };
         const renderCollectionStatuses = (card) => {

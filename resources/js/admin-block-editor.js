@@ -52,6 +52,12 @@
             return;
         }
 
+        var saveTitleBtn = e.target.closest('.btn-save-block-title');
+        if (saveTitleBtn) {
+            saveBlockTitle(saveTitleBtn.dataset.blockId);
+            return;
+        }
+
         var toggleBtn = e.target.closest('.btn-toggle-collapse');
         if (toggleBtn) {
             var card = toggleBtn.closest('.block-card');
@@ -176,14 +182,55 @@
 
     window.__saveBlockMediaOrder = saveBlockMediaOrder;
 
+    function saveBlockTitle(blockId) {
+        var card = blockList.querySelector('.block-card[data-block-id="' + blockId + '"]');
+        if (!card) return;
+        var input = card.querySelector('.block-title-input');
+        if (!input) return;
+        var title = input.value;
+        var statusEl = card.querySelector('.block-title-status');
+
+        fetch('/admin/collections/' + collectionId + '/blocks/' + blockId + '/update?json=1', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-CSRF-Token': _csrfToken
+            },
+            body: 'title=' + encodeURIComponent(title)
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data && data.success) {
+                if (statusEl) statusEl.textContent = t.draftSaved;
+                var previewEl = card.querySelector('.block-card-title-preview');
+                if (previewEl) previewEl.textContent = title ? ' · ' + title : '';
+                showPageNotice(t.draftSaved);
+                document.dispatchEvent(new CustomEvent('draft-changed'));
+            } else {
+                if (statusEl) statusEl.textContent = t.saveFailed;
+                showPageNotice(t.saveFailed, true);
+            }
+        })
+        .catch(function() {
+            if (statusEl) statusEl.textContent = t.draftSaveFailed;
+            showPageNotice(t.draftSaveFailed, true);
+        });
+    }
+
     function createBlockCardHtml(block) {
         var id = block.id;
         if (block.block_type === 'media') {
+            var titleRowHtml = '<div class="block-title-row" data-block-id="' + id + '">' +
+                '<input type="text" id="block-title-' + id + '" class="block-title-input" name="block_title" value="" placeholder="' + (t.anthologyTitlePlaceholder || '') + '" maxlength="120" data-block-id="' + id + '">' +
+                '<button type="button" class="btn-secondary btn-save-block-title" data-block-id="' + id + '">' + (t.saveTitle || 'Save') + '</button>' +
+                '<span class="autosave-status block-title-status" data-block-id="' + id + '" aria-live="polite"></span>' +
+            '</div>';
             return '<div class="section block-card block-card-media" data-block-id="' + id + '" data-block-type="media" data-is-published="0" draggable="true">' +
                 '<div class="section-header">' +
                     '<div class="block-card-header-left">' +
                         '<span class="block-handle" title="' + t.dragToReorder + '">⠿</span>' +
-                        '<div><h2>' + t.mediaManagement + '</h2><p class="section-subtitle">' + t.mediaManagementHint + '</p></div>' +
+                        '<div><h2>' + t.mediaManagement + '<span class="block-card-title-preview" data-block-id="' + id + '"></span></h2><p class="section-subtitle">' + t.mediaManagementHint + '</p></div>' +
                     '</div>' +
                     '<div class="block-card-header-right">' +
                         '<button type="button" class="btn-toggle-collapse" data-block-id="' + id + '" title="' + t.collapseBlock + '">' +
@@ -205,6 +252,7 @@
                             '<input type="file" name="media" accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.wmv,.flv" multiple required>' +
                             '<button type="submit" class="btn-primary">' + t.startUpload + '</button>' +
                         '</form>' +
+                        titleRowHtml +
                     '</div>' +
                     '<div class="block-upload-progress" style="display:none; margin-top: 0.75rem;">' +
                         '<div class="block-upload-progress-text" style="font-size:12px;color:#666;margin-bottom:4px;">' + t.preparingUpload + '</div>' +
@@ -251,7 +299,7 @@
     }
 
     function addBlock(blockType) {
-        if (blockType === 'media' && collectionDisplayType !== 'report') {
+        if (blockType === 'media' && collectionDisplayType !== 'report' && collectionDisplayType !== 'anthology') {
             var existingMediaBlocks = blockList.querySelectorAll('.block-card-media');
             if (existingMediaBlocks.length >= 1) {
                 alert(t.mediaBlockLimitReached || 'This collection type only supports one media block');

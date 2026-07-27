@@ -4,6 +4,7 @@
     "noReport": "No description yet",
     "loadingMore": "Loading more...",
     "allLoaded": "All content loaded",
+    "backToPrev": "Go back",
     "prevPage": "Previous",
     "nextPage": "Next"
   },
@@ -207,7 +208,7 @@
       "uploadImageOnly": "Please upload image files.",
       "confirmDeleteCollection": "Are you sure you want to delete this collection? This will delete the collection and all its media, and cannot be undone.",
       "blockLayout": "Content Layout",
-      "blockLayoutHint": "Drag to reorder blocks, controlling the public page layout; text blocks can be added multiple times, media blocks only available in report mode",
+      "blockLayoutHint": "Drag to reorder blocks, controlling the public page layout; text blocks can be added multiple times, media blocks can be added in report and anthology modes",
       "contentLayout": "Content Layout",
       "contentLayoutHint": "Drag to reorder media and text blocks, controlling the public page layout; save changes then publish to update the public page",
       "mediaManagement": "Media Management",
@@ -217,6 +218,9 @@
       "textBlock": "Text Block",
       "mediaBlockCount": "{{count}} media items",
       "dragToReorder": "Drag to reorder",
+      "anthologyTitle": "Anthology Title",
+      "anthologyTitlePlaceholder": "Enter anthology title",
+      "saveTitle": "Save Title",
       "addTextBlock": "+ Add Statement Block",
       "addMediaBlock": "+ Add Media Block",
       "moveUp": "Move Up",
@@ -421,6 +425,7 @@
       "diptych": "Diptych",
       "wall": "Wall",
       "report": "Report",
+      "anthology": "Anthology",
       "video": "Video"
     },
     "common": {

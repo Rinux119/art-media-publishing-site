@@ -4,6 +4,7 @@
     "noReport": "作品説明はまだありません",
     "loadingMore": "読み込み中...",
     "allLoaded": "すべてのコンテンツが読み込まれました",
+    "backToPrev": "戻る",
     "prevPage": "前へ",
     "nextPage": "次へ"
   },
@@ -207,7 +208,7 @@
       "uploadImageOnly": "画像ファイルをアップロードしてください。",
       "confirmDeleteCollection": "このコレクションを削除してもよろしいですか？コレクションとそのすべてのメディアが削除され、元に戻すことはできません。",
       "blockLayout": "コンテンツレイアウト",
-      "blockLayoutHint": "ドラッグでブロックの順序を調整し、公開ページのレイアウトを制御；テキストブロックは複数追加可能、メディアブロックはレポートモードのみ追加可能",
+      "blockLayoutHint": "ドラッグでブロックの順序を調整し、公開ページのレイアウトを制御；テキストブロックは複数追加可能、メディアブロックはレポートとアンソロジーモードで複数追加可能",
       "contentLayout": "コンテンツレイアウト",
       "contentLayoutHint": "ドラッグでメディアとテキストブロックの順序を調整し、公開ページのレイアウトを制御；保存後に公開すると公開ページに反映されます",
       "mediaManagement": "メディア管理",
@@ -217,6 +218,9 @@
       "textBlock": "テキストブロック",
       "mediaBlockCount": "{{count}} 件のメディア",
       "dragToReorder": "ドラッグで並べ替え",
+      "anthologyTitle": "アンソロジータイトル",
+      "anthologyTitlePlaceholder": "アンソロジータイトルを入力",
+      "saveTitle": "タイトルを保存",
       "addTextBlock": "+ ステートメントブロックを追加",
       "addMediaBlock": "+ メディアブロックを追加",
       "moveUp": "上のレイヤー",
@@ -421,6 +425,7 @@
       "diptych": "ダイプティク",
       "wall": "ウォール",
       "report": "レポート",
+      "anthology": "アンソロジー",
       "video": "動画"
     },
     "common": {

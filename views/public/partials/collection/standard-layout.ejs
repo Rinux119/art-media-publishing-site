@@ -8,4 +8,9 @@
       <div class="report-empty"><%= __('public.noReport') %></div>
     <% } %>
 </div>
-<div id="wall-loading" class="wall-loading" data-batch-size="<%= wallBatchSize || 20 %>" data-all-loaded-text="<%= __('public.allLoaded') %>"><%= __('public.loadingMore') %></div>
+<div id="wall-loading" class="wall-loading" data-batch-size="<%= wallBatchSize || 20 %>" data-all-loaded-text=""><%= __('public.loadingMore') %></div>
+<% if (typeof activeBlockId !== 'undefined' && activeBlockId) { %>
+<div class="wall-loading">
+  <a class="wall-loading-back" href="/<%= collection.slug %>"><%= __('public.backToPrev') %></a>
+</div>
+<% } %>

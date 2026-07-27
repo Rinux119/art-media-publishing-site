@@ -337,6 +337,7 @@ const registerAdminRoutes = ({
                 OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND b.is_deleted_draft = 1)
                 OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND COALESCE(b.markdown, '') <> COALESCE(b.published_markdown, ''))
                 OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND COALESCE(b.media_ids, '[]') <> COALESCE(b.published_media_ids, '[]'))
+                OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND COALESCE(b.title, '') <> COALESCE(b.published_title, ''))
                 OR EXISTS (SELECT 1 FROM collection_blocks b WHERE b.collection_id = c.id AND b.order_index <> b.published_order_index)
               THEN 1 ELSE 0 END AS has_pending_draft_changes
             FROM collections c
@@ -905,7 +906,7 @@ const registerAdminRoutes = ({
             return res.redirect('/admin');
         }
         const blockType = (req.body.block_type === 'media') ? 'media' : 'text';
-        if (blockType === 'media' && collection.display_type !== 'report') {
+        if (blockType === 'media' && collection.display_type !== 'report' && collection.display_type !== 'anthology') {
             const existingMediaBlocks = db.prepare('SELECT COUNT(*) AS count FROM collection_blocks WHERE collection_id = ? AND block_type = \'media\' AND is_deleted_draft = 0').get(req.params.id);
             if (existingMediaBlocks && existingMediaBlocks.count >= 1) {
                 if (wantsJson(req)) return res.status(400).json({ success: false, error: req.__('admin.collectionDetail.mediaBlockLimitReached') });
@@ -936,13 +937,29 @@ const registerAdminRoutes = ({
             const markdown = typeof req.body.markdown === 'string' ? req.body.markdown : '';
             db.prepare('UPDATE collection_blocks SET markdown = ? WHERE id = ?').run(markdown, req.params.blockId);
         } else if (block.block_type === 'media') {
-            let mediaIds = [];
-            try {
-                mediaIds = JSON.parse(typeof req.body.media_ids === 'string' ? req.body.media_ids : '[]');
-                if (!Array.isArray(mediaIds)) mediaIds = [];
-                mediaIds = mediaIds.map((id) => Number(id)).filter((id) => id > 0);
-            } catch (_) { mediaIds = []; }
-            db.prepare('UPDATE collection_blocks SET media_ids = ? WHERE id = ?').run(JSON.stringify(mediaIds), req.params.blockId);
+            const hasMediaIds = Object.prototype.hasOwnProperty.call(req.body, 'media_ids');
+            const hasTitle = Object.prototype.hasOwnProperty.call(req.body, 'title');
+            const updates = [];
+            const params = [];
+            if (hasMediaIds) {
+                let mediaIds = [];
+                try {
+                    mediaIds = JSON.parse(typeof req.body.media_ids === 'string' ? req.body.media_ids : '[]');
+                    if (!Array.isArray(mediaIds)) mediaIds = [];
+                    mediaIds = mediaIds.map((id) => Number(id)).filter((id) => id > 0);
+                } catch (_) { mediaIds = []; }
+                updates.push('media_ids = ?');
+                params.push(JSON.stringify(mediaIds));
+            }
+            if (hasTitle) {
+                const title = typeof req.body.title === 'string' ? req.body.title : '';
+                updates.push('title = ?');
+                params.push(title);
+            }
+            if (updates.length > 0) {
+                params.push(req.params.blockId);
+                db.prepare('UPDATE collection_blocks SET ' + updates.join(', ') + ' WHERE id = ?').run(...params);
+            }
         }
         const collection = db.prepare('SELECT slug FROM collections WHERE id = ?').get(req.params.id);
         if (collection && collection.slug) invalidateCachedData({ collectionId: req.params.id, collectionSlug: collection.slug });
@@ -1014,6 +1031,7 @@ const registerAdminRoutes = ({
                     published_markdown = markdown,
                     published_media_ids = media_ids,
                     published_order_index = order_index,
+                    published_title = title,
                     is_published = 1
                 WHERE collection_id = ?
             `).run(collectionId);

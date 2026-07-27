@@ -4,6 +4,7 @@
     "noReport": "暫無作品闡述",
     "loadingMore": "滑動載入中...",
     "allLoaded": "已載入全部內容",
+    "backToPrev": "返回上一級",
     "prevPage": "上一頁",
     "nextPage": "下一頁"
   },
@@ -207,7 +208,7 @@
       "uploadImageOnly": "請上傳圖片檔案。",
       "confirmDeleteCollection": "確定要刪除這個作品集嗎？該操作會刪除此作品集及其所有媒體，且無法恢復。",
       "blockLayout": "內容佈局",
-      "blockLayoutHint": "拖曳調整區塊順序，控制前台頁面展示佈局；文字區塊可新增多個，圖片區塊僅作品報告模式可新增",
+      "blockLayoutHint": "拖曳調整區塊順序，控制前台頁面展示佈局；文字區塊可新增多個，圖片區塊在作品報告和合集模式下可新增多個",
       "contentLayout": "內容佈局",
       "contentLayoutHint": "拖曳調整圖片和文字區塊的順序，控制前台頁面展示佈局；點擊儲存後需發佈才生效",
       "mediaManagement": "媒體管理",
@@ -217,6 +218,9 @@
       "textBlock": "文字區塊",
       "mediaBlockCount": "{{count}} 個媒體",
       "dragToReorder": "拖曳調整順序",
+      "anthologyTitle": "合集標題",
+      "anthologyTitlePlaceholder": "輸入合集標題",
+      "saveTitle": "儲存標題",
       "addTextBlock": "+ 新增闡述區塊",
       "addMediaBlock": "+ 新增媒體區塊",
       "moveUp": "上一層",
@@ -421,6 +425,7 @@
       "diptych": "雙聯畫",
       "wall": "照片牆",
       "report": "作品報告",
+      "anthology": "合集",
       "video": "影片"
     },
     "common": {

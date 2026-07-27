@@ -185,6 +185,14 @@ if (blockColumns.length > 0) {
         db.exec("ALTER TABLE collection_blocks ADD COLUMN is_deleted_draft INTEGER NOT NULL DEFAULT 0");
     }
     db.exec("UPDATE collection_blocks SET is_deleted_draft = 0 WHERE is_deleted_draft IS NULL");
+    if (!blockColumns.some((col) => col.name === 'title')) {
+        db.exec("ALTER TABLE collection_blocks ADD COLUMN title TEXT NOT NULL DEFAULT ''");
+    }
+    db.exec("UPDATE collection_blocks SET title = '' WHERE title IS NULL");
+    if (!blockColumns.some((col) => col.name === 'published_title')) {
+        db.exec("ALTER TABLE collection_blocks ADD COLUMN published_title TEXT NOT NULL DEFAULT ''");
+    }
+    db.exec("UPDATE collection_blocks SET published_title = '' WHERE published_title IS NULL");
     const existingBlockCount = db.prepare('SELECT COUNT(*) AS count FROM collection_blocks').get();
     if (!existingBlockCount || existingBlockCount.count === 0) {
         const collectionsForBlocks = db.prepare('SELECT id, report_markdown, published_report_markdown FROM collections').all();

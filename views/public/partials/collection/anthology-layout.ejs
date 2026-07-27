@@ -1,0 +1,32 @@
+<% const anthologyEntries = (typeof blocks !== 'undefined' && Array.isArray(blocks))
+    ? blocks.filter(function(b) { return b.blockType === 'media' && b.media && b.media.length > 0; })
+    : [];
+%>
+<div class="anthology-layout">
+    <div class="anthology-grid">
+        <% anthologyEntries.forEach(function(block) { %>
+            <% const firstMedia = block.media[0]; %>
+            <a class="anthology-entry" href="/<%= collection.slug %>/<%= block.id %>">
+                <div class="anthology-entry-thumb media-item is-thumbnail">
+                    <% if (firstMedia.isVideo) { %>
+                        <video autoplay loop muted playsinline preload="metadata">
+                            <source src="<%= firstMedia.mediaUrl %>">
+                        </video>
+                    <% } else { %>
+                        <img src="<%= firstMedia.mediaUrl %>" alt="<%= firstMedia.original_name || collection.name %>" loading="lazy">
+                    <% } %>
+                </div>
+                <% if (block.title) { %>
+                    <span class="anthology-entry-title"><%= block.title %></span>
+                <% } %>
+            </a>
+        <% }); %>
+    </div>
+    <% blocks.forEach(function(block) { %>
+        <% if (block.blockType === 'text') { %>
+            <% if (block.html) { %>
+                <div class="report-text"><%- block.html %></div>
+            <% } %>
+        <% } %>
+    <% }); %>
+</div>

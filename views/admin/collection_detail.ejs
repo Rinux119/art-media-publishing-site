@@ -38,7 +38,7 @@
                         <div class="block-card-header-left">
                             <span class="block-handle" title="<%= __('admin.collectionDetail.dragToReorder') %>">⠿</span>
                             <div>
-                                <h2><%= __('admin.collectionDetail.mediaManagement') %></h2>
+                                <h2><%= __('admin.collectionDetail.mediaManagement') %><% if (block.title) { %><span class="block-card-title-preview"> · <%= block.title %></span><% } %></h2>
                                 <p class="section-subtitle"><%= __('admin.collectionDetail.mediaManagementHint') %></p>
                             </div>
                         </div>
@@ -62,6 +62,11 @@
                                 <input type="file" name="media" accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.wmv,.flv" multiple required>
                                 <button type="submit" class="btn-primary"><%= __('admin.collectionDetail.startUpload') %></button>
                             </form>
+                            <div class="block-title-row" data-block-id="<%= block.id %>">
+                                <input type="text" id="block-title-<%= block.id %>" class="block-title-input" name="block_title" value="<%= block.title || '' %>" placeholder="<%= __('admin.collectionDetail.anthologyTitlePlaceholder') %>" maxlength="120" data-block-id="<%= block.id %>">
+                                <button type="button" class="btn-secondary btn-save-block-title" data-block-id="<%= block.id %>"><%= __('admin.collectionDetail.saveTitle') %></button>
+                                <span class="autosave-status block-title-status" data-block-id="<%= block.id %>" aria-live="polite"></span>
+                            </div>
                         </div>
                         <div class="block-upload-progress" style="display:none; margin-top: 0.75rem;">
                             <div class="block-upload-progress-text" style="font-size:12px;color:#666;margin-bottom:4px;"><%= __('admin.collectionDetail.preparingUpload') %></div>

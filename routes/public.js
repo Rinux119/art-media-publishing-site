@@ -270,14 +270,14 @@ const registerPublicRoutes = ({
             return mapped;
         });
 
-        const rawBlocks = db.prepare('SELECT id, block_type, published_markdown AS markdown, published_media_ids AS media_ids, published_order_index AS order_index FROM collection_blocks WHERE collection_id = ? AND (published_markdown != \'\' OR published_media_ids != \'[]\') ORDER BY published_order_index ASC').all(collection.id);
+        const rawBlocks = db.prepare('SELECT id, block_type, published_markdown AS markdown, published_media_ids AS media_ids, published_order_index AS order_index, published_title AS title FROM collection_blocks WHERE collection_id = ? AND (published_markdown != \'\' OR published_media_ids != \'[]\') ORDER BY published_order_index ASC').all(collection.id);
         const mediaMap = new Map(processedMedia.map((m) => [m.id, m]));
         const blocks = rawBlocks.map((block) => {
             if (block.block_type === 'media') {
                 let ids = [];
                 try { ids = JSON.parse(block.media_ids || '[]'); } catch (_) { ids = []; }
                 const blockMedia = ids.map((id) => mediaMap.get(id)).filter(Boolean);
-                return { id: block.id, blockType: 'media', orderIndex: block.order_index, media: blockMedia };
+                return { id: block.id, blockType: 'media', orderIndex: block.order_index, title: block.title || '', media: blockMedia };
             } else {
                 const html = renderMarkdown(block.markdown || '');
                 return { id: block.id, blockType: 'text', orderIndex: block.order_index, markdown: block.markdown || '', html };
@@ -311,6 +311,73 @@ const registerPublicRoutes = ({
         }
     });
 
+    app.get('/:slug/:blockId', async (req, res, next) => {
+        const { slug, blockId } = req.params;
+        if (isReservedSlug(slug)) return next();
+        if (!/^\d+$/.test(blockId)) return next();
+
+        const collection = getPublicCollectionBySlug(slug);
+        if (!collection) return renderNotFound(req, res);
+        if (isCollectionAccessBlocked(collection)) return renderNotFound(req, res);
+
+        const publicCollection = toPublicCollection(collection);
+        const displayType = normalizeCollectionDisplayType(publicCollection.display_type);
+        if (displayType !== 'anthology') return next();
+
+        const blockIdNum = Number(blockId);
+        const rawBlock = db.prepare(
+            'SELECT id, block_type, published_markdown AS markdown, published_media_ids AS media_ids, published_order_index AS order_index, published_title AS title FROM collection_blocks WHERE id = ? AND collection_id = ? AND is_published = 1 AND is_deleted_draft = 0'
+        ).get(blockIdNum, collection.id);
+        if (!rawBlock) return renderNotFound(req, res);
+        if (rawBlock.block_type !== 'media') return renderNotFound(req, res);
+
+        const rawMedia = getPublishedMediaByCollectionId(collection.id);
+        const processedMedia = rawMedia.map((mediaItem) => {
+            const mapped = mapMediaForCollection(publicCollection, mediaItem);
+            if (mapped.isImage) {
+                mapped.mediaUrl = resolveCollectionImageUrlByPreference(publicCollection.slug, mapped.filename, 'thumb');
+            }
+            return mapped;
+        });
+        const mediaMap = new Map(processedMedia.map((m) => [m.id, m]));
+
+        let blockMediaIds = [];
+        try { blockMediaIds = JSON.parse(rawBlock.media_ids || '[]'); } catch (_) { blockMediaIds = []; }
+        const blockMedia = blockMediaIds.map((id) => mediaMap.get(id)).filter(Boolean);
+
+        if (blockMedia.length === 0) return renderNotFound(req, res);
+
+        const block = { id: rawBlock.id, blockType: 'media', orderIndex: rawBlock.order_index, title: rawBlock.title || '', media: blockMedia };
+        const reportHtml = renderMarkdown(publicCollection.report_markdown || '');
+
+        try {
+            return await sendHtmlWithCache(req, res, {
+                cacheKey: `page:${res.locals.locale}:${req.originalUrl}`,
+                ttlSeconds: 10,
+                renderHtml: () => new Promise((resolve, reject) => {
+                    res.render('public/collection', {
+                        collection: publicCollection,
+                        displayType: 'single',
+                        blockId: blockIdNum,
+                        reportHtml,
+                        media: blockMedia,
+                        blocks: [block],
+                        totalMediaCount: blockMedia.length,
+                        currentPage: 1,
+                        totalPages: 1,
+                        offset: 0,
+                        wallBatchSize: 20
+                    }, (err, html) => {
+                        if (err) return reject(err);
+                        return resolve(html);
+                    });
+                })
+            });
+        } catch (err) {
+            return next(err);
+        }
+    });
+
     app.get('/:slug/:mediaLarge', async (req, res, next) => {
         const { slug, mediaLarge } = req.params;
         if (isReservedSlug(slug)) return next();
@@ -325,7 +392,22 @@ const registerPublicRoutes = ({
 
         const publicCollection = toPublicCollection(collection);
         const displayType = normalizeCollectionDisplayType(publicCollection.display_type);
-        const mediaList = getPublishedMediaByCollectionId(collection.id);
+        let mediaList = getPublishedMediaByCollectionId(collection.id);
+
+        const blockQuery = req.query && req.query.block ? String(req.query.block) : '';
+        let activeBlockId = null;
+        if (blockQuery && /^\d+$/.test(blockQuery)) {
+            activeBlockId = Number(blockQuery);
+            const rawBlock = db.prepare(
+                'SELECT published_media_ids AS media_ids FROM collection_blocks WHERE id = ? AND collection_id = ? AND is_published = 1 AND is_deleted_draft = 0'
+            ).get(activeBlockId, collection.id);
+            if (rawBlock) {
+                let blockMediaIds = [];
+                try { blockMediaIds = JSON.parse(rawBlock.media_ids || '[]'); } catch (_) { blockMediaIds = []; }
+                const idSet = new Set(blockMediaIds);
+                mediaList = mediaList.filter((m) => idSet.has(m.id));
+            }
+        }
 
         let currentIndex = mediaList.findIndex((mediaItem) => mediaItem.filename === requestedFilename);
         if (currentIndex === -1) {
@@ -335,8 +417,13 @@ const registerPublicRoutes = ({
 
         const buildLargePageUrl = (mediaItem) => {
             const base = mediaItem.filename.replace(/\.[^/.]+$/, '');
-            return `/${publicCollection.slug}/${base}_large`;
+            const url = `/${publicCollection.slug}/${base}_large`;
+            return activeBlockId ? `${url}?block=${activeBlockId}` : url;
         };
+
+        const backUrl = activeBlockId
+            ? `/${publicCollection.slug}/${activeBlockId}`
+            : `/${publicCollection.slug}`;
 
         let reportHtml = '';
         let mediaItems = [];
@@ -392,7 +479,8 @@ const registerPublicRoutes = ({
                         prevUrl,
                         nextUrl,
                         currentPage,
-                        totalPages
+                        totalPages,
+                        backUrl
                     }, (err, html) => {
                         if (err) return reject(err);
                         return resolve(html);

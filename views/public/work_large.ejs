@@ -148,7 +148,7 @@ cellColor="#949494";
                       <video autoplay loop muted playsinline preload="auto" src="<%= item.mediaUrl %>">
                       </video>
                     <% } else { %>
-                      <a href="<%= nextUrl ? nextUrl : '/' + collection.slug %>" style="display: block;">
+                      <a href="<%= nextUrl ? nextUrl : (typeof backUrl !== 'undefined' ? backUrl : '/' + collection.slug) %>" style="display: block;">
                         <img src="<%= item.mediaUrl %>" alt="<%= collection.name %>">
                       </a>
                     <% } %>
@@ -178,7 +178,7 @@ cellColor="#949494";
               <video class="minimal-video" autoplay loop muted playsinline preload="auto" src="<%= item.mediaUrl %>">
               </video>
             <% } else if (item) { %>
-              <a href="<%= nextUrl ? nextUrl : '/' + collection.slug %>">
+              <a href="<%= nextUrl ? nextUrl : (typeof backUrl !== 'undefined' ? backUrl : '/' + collection.slug) %>">
                 <img src="<%= item.mediaUrl %>"
                     style="display: block; margin: 0 auto; max-width: 100%; height: auto;"
                     id="previewImage"

@@ -24,7 +24,8 @@ For PRs, I'll do my best to understand the code you submit, but I can't promise 
 
 ### Public Site
 - Homepage, collection list, full-size image viewer, artwork description
-- Lightbox viewer: all display modes (single/diptych/wall/report) open a Lightbox overlay on click instead of navigating to a new page; supports left/right navigation, keyboard controls (Esc to close, ← → to switch), and click-to-dismiss; diptych mode shows both images side by side (stacked vertically on mobile); artwork description rendered as Markdown at the bottom
+- Lightbox viewer: all display modes (single/diptych/wall/report/anthology) open a Lightbox overlay on click instead of navigating to a new page; supports left/right navigation, keyboard controls (Esc to close, ← → to switch), and click-to-dismiss; diptych mode shows both images side by side (stacked vertically on mobile); artwork description rendered as Markdown at the bottom
+- Fifth display mode "anthology": the collection homepage shows a Grid of anthology entries (each media block corresponds to one anthology, with the first image of the block as its thumbnail); clicking an entry opens that anthology's thumbnail page; each anthology supports an independent title shown beneath its thumbnail
 
 ### Admin Dashboard
 - Login authentication, user management, homepage media management, collection management

@@ -136,7 +136,7 @@
           }
         }
         if (cursor >= items.length) {
-          loading.textContent = loading.dataset.allLoadedText || 'All content loaded';
+          loading.textContent = loading.dataset.allLoadedText || '';
         }
         initThumbVideos(appended);
         return;
@@ -151,7 +151,7 @@
         }
       }
       if (cursor >= items.length) {
-        loading.textContent = loading.dataset.allLoadedText || 'All content loaded';
+        loading.textContent = loading.dataset.allLoadedText || '';
       }
       initThumbVideos(appended);
     }
