@@ -272,7 +272,7 @@
             '<div class="section-header">' +
                 '<div class="block-card-header-left">' +
                     '<span class="block-handle" title="' + t.dragToReorder + '">⠿</span>' +
-                    '<div><h2>' + t.artistStatement + '</h2><p class="section-subtitle">' + t.reportPlaceholder + '</p></div>' +
+                    '<div><h2>' + t.artistStatement + '<span class="block-card-title-preview" data-block-id="' + id + '"></span></h2><p class="section-subtitle">' + t.reportPlaceholder + '</p></div>' +
                 '</div>' +
                 '<div class="block-card-header-right">' +
                     '<button type="button" class="btn-toggle-collapse" data-block-id="' + id + '" title="' + t.collapseBlock + '">' +
@@ -288,6 +288,11 @@
             '</div>' +
             '<div class="block-card-body">' +
                 '<div class="block-text-editor">' +
+                    '<div class="block-title-row" data-block-id="' + id + '">' +
+                        '<input type="text" id="block-title-' + id + '" class="block-title-input" name="block_title" value="" placeholder="' + (t.documentTitlePlaceholder || '') + '" maxlength="120" data-block-id="' + id + '">' +
+                        '<button type="button" class="btn-secondary btn-save-block-title" data-block-id="' + id + '">' + (t.saveTitle || 'Save') + '</button>' +
+                        '<span class="autosave-status block-title-status" data-block-id="' + id + '" aria-live="polite"></span>' +
+                    '</div>' +
                     '<textarea name="markdown" placeholder="' + t.reportPlaceholder + '"></textarea>' +
                     '<div class="block-text-actions">' +
                         '<button type="button" class="btn-primary btn-save-text-block" data-block-id="' + id + '">' + t.saveText + '</button>' +
@@ -299,7 +304,7 @@
     }
 
     function addBlock(blockType) {
-        if (blockType === 'media' && collectionDisplayType !== 'report' && collectionDisplayType !== 'anthology') {
+        if (blockType === 'media' && collectionDisplayType !== 'report' && collectionDisplayType !== 'anthology' && collectionDisplayType !== 'archiving') {
             var existingMediaBlocks = blockList.querySelectorAll('.block-card-media');
             if (existingMediaBlocks.length >= 1) {
                 alert(t.mediaBlockLimitReached || 'This collection type only supports one media block');

@@ -52,6 +52,11 @@
           <div class="report-empty"><%= __('public.noReport') %></div>
         <% } %>
       </div>
+      <% if (typeof activeBlockId !== 'undefined' && activeBlockId) { %>
+      <div class="wall-loading">
+        <a class="wall-loading-back" href="/<%= collection.slug %>"><%= __('public.backToPrev') %></a>
+      </div>
+      <% } %>
     <% } %>
   <% }); %>
 <% } %>

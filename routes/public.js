@@ -280,7 +280,7 @@ const registerPublicRoutes = ({
                 return { id: block.id, blockType: 'media', orderIndex: block.order_index, title: block.title || '', media: blockMedia };
             } else {
                 const html = renderMarkdown(block.markdown || '');
-                return { id: block.id, blockType: 'text', orderIndex: block.order_index, markdown: block.markdown || '', html };
+                return { id: block.id, blockType: 'text', orderIndex: block.order_index, title: block.title || '', markdown: block.markdown || '', html };
             }
         });
 
@@ -322,32 +322,40 @@ const registerPublicRoutes = ({
 
         const publicCollection = toPublicCollection(collection);
         const displayType = normalizeCollectionDisplayType(publicCollection.display_type);
-        if (displayType !== 'anthology') return next();
+        if (displayType !== 'anthology' && displayType !== 'archiving') return next();
 
         const blockIdNum = Number(blockId);
         const rawBlock = db.prepare(
             'SELECT id, block_type, published_markdown AS markdown, published_media_ids AS media_ids, published_order_index AS order_index, published_title AS title FROM collection_blocks WHERE id = ? AND collection_id = ? AND is_published = 1 AND is_deleted_draft = 0'
         ).get(blockIdNum, collection.id);
         if (!rawBlock) return renderNotFound(req, res);
-        if (rawBlock.block_type !== 'media') return renderNotFound(req, res);
 
-        const rawMedia = getPublishedMediaByCollectionId(collection.id);
-        const processedMedia = rawMedia.map((mediaItem) => {
-            const mapped = mapMediaForCollection(publicCollection, mediaItem);
-            if (mapped.isImage) {
-                mapped.mediaUrl = resolveCollectionImageUrlByPreference(publicCollection.slug, mapped.filename, 'thumb');
-            }
-            return mapped;
-        });
-        const mediaMap = new Map(processedMedia.map((m) => [m.id, m]));
+        let block;
+        let blockMedia = [];
+        if (rawBlock.block_type === 'media') {
+            const rawMedia = getPublishedMediaByCollectionId(collection.id);
+            const processedMedia = rawMedia.map((mediaItem) => {
+                const mapped = mapMediaForCollection(publicCollection, mediaItem);
+                if (mapped.isImage) {
+                    mapped.mediaUrl = resolveCollectionImageUrlByPreference(publicCollection.slug, mapped.filename, 'thumb');
+                }
+                return mapped;
+            });
+            const mediaMap = new Map(processedMedia.map((m) => [m.id, m]));
 
-        let blockMediaIds = [];
-        try { blockMediaIds = JSON.parse(rawBlock.media_ids || '[]'); } catch (_) { blockMediaIds = []; }
-        const blockMedia = blockMediaIds.map((id) => mediaMap.get(id)).filter(Boolean);
+            let blockMediaIds = [];
+            try { blockMediaIds = JSON.parse(rawBlock.media_ids || '[]'); } catch (_) { blockMediaIds = []; }
+            blockMedia = blockMediaIds.map((id) => mediaMap.get(id)).filter(Boolean);
 
-        if (blockMedia.length === 0) return renderNotFound(req, res);
+            if (blockMedia.length === 0) return renderNotFound(req, res);
 
-        const block = { id: rawBlock.id, blockType: 'media', orderIndex: rawBlock.order_index, title: rawBlock.title || '', media: blockMedia };
+            block = { id: rawBlock.id, blockType: 'media', orderIndex: rawBlock.order_index, title: rawBlock.title || '', media: blockMedia };
+        } else if (rawBlock.block_type === 'text') {
+            const html = renderMarkdown(rawBlock.markdown || '');
+            block = { id: rawBlock.id, blockType: 'text', orderIndex: rawBlock.order_index, title: rawBlock.title || '', markdown: rawBlock.markdown || '', html };
+        } else {
+            return renderNotFound(req, res);
+        }
         const reportHtml = renderMarkdown(publicCollection.report_markdown || '');
 
         try {

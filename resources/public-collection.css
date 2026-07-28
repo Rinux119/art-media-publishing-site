@@ -407,3 +407,33 @@
   @media (max-width: 519px) {
     .anthology-grid { grid-template-columns: 1fr; }
   }
+
+  .archiving-layout {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+  }
+  .archiving-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .archiving-entry {
+    padding: 0;
+    margin: 0;
+  }
+  .archiving-entry a {
+    display: inline-block;
+    color: #333333;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: inherit;
+    letter-spacing: 0.5px;
+    line-height: 1.6;
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+  .archiving-entry a:hover,
+  .archiving-entry a:focus {
+    color: #757575;
+  }

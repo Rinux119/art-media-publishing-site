@@ -1,0 +1,13 @@
+<% const archivingEntries = (typeof blocks !== 'undefined' && Array.isArray(blocks))
+    ? blocks.filter(function(b) { return b.title; })
+    : [];
+%>
+<div class="archiving-layout">
+    <ul class="archiving-list">
+        <% archivingEntries.forEach(function(block) { %>
+            <li class="archiving-entry">
+                <a href="/<%= collection.slug %>/<%= block.id %>"><%= block.title %></a>
+            </li>
+        <% }); %>
+    </ul>
+</div>

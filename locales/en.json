@@ -212,7 +212,7 @@
       "uploadImageOnly": "Please upload image files.",
       "confirmDeleteCollection": "Are you sure you want to delete this collection? This will delete the collection and all its media, and cannot be undone.",
       "blockLayout": "Content Layout",
-      "blockLayoutHint": "Drag to reorder blocks, controlling the public page layout; text blocks can be added multiple times, media blocks can be added in report and anthology modes",
+      "blockLayoutHint": "Drag to reorder blocks, controlling the public page layout; text blocks can be added multiple times, media blocks can be added in report, anthology and archiving modes",
       "contentLayout": "Content Layout",
       "contentLayoutHint": "Drag to reorder media and text blocks, controlling the public page layout; save changes then publish to update the public page",
       "mediaManagement": "Media Management",
@@ -224,6 +224,7 @@
       "dragToReorder": "Drag to reorder",
       "anthologyTitle": "Anthology Title",
       "anthologyTitlePlaceholder": "Enter anthology title",
+      "documentTitlePlaceholder": "Enter document title",
       "saveTitle": "Save Title",
       "addTextBlock": "+ Add Statement Block",
       "addMediaBlock": "+ Add Media Block",
@@ -430,6 +431,7 @@
       "wall": "Wall",
       "report": "Report",
       "anthology": "Anthology",
+      "archiving": "Archiving",
       "video": "Video"
     },
     "common": {

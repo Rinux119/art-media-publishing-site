@@ -998,7 +998,7 @@ const registerAdminRoutes = ({
             return res.redirect('/admin');
         }
         const blockType = (req.body.block_type === 'media') ? 'media' : 'text';
-        if (blockType === 'media' && collection.display_type !== 'report' && collection.display_type !== 'anthology') {
+        if (blockType === 'media' && collection.display_type !== 'report' && collection.display_type !== 'anthology' && collection.display_type !== 'archiving') {
             const existingMediaBlocks = db.prepare('SELECT COUNT(*) AS count FROM collection_blocks WHERE collection_id = ? AND block_type = \'media\' AND is_deleted_draft = 0').get(req.params.id);
             if (existingMediaBlocks && existingMediaBlocks.count >= 1) {
                 if (wantsJson(req)) return res.status(400).json({ success: false, error: req.__('admin.collectionDetail.mediaBlockLimitReached') });
@@ -1026,8 +1026,24 @@ const registerAdminRoutes = ({
             return res.redirect('/admin');
         }
         if (block.block_type === 'text') {
-            const markdown = typeof req.body.markdown === 'string' ? req.body.markdown : '';
-            db.prepare('UPDATE collection_blocks SET markdown = ? WHERE id = ?').run(markdown, req.params.blockId);
+            const hasMarkdown = Object.prototype.hasOwnProperty.call(req.body, 'markdown');
+            const hasTitle = Object.prototype.hasOwnProperty.call(req.body, 'title');
+            const updates = [];
+            const params = [];
+            if (hasMarkdown) {
+                const markdown = typeof req.body.markdown === 'string' ? req.body.markdown : '';
+                updates.push('markdown = ?');
+                params.push(markdown);
+            }
+            if (hasTitle) {
+                const title = typeof req.body.title === 'string' ? req.body.title : '';
+                updates.push('title = ?');
+                params.push(title);
+            }
+            if (updates.length > 0) {
+                params.push(req.params.blockId);
+                db.prepare('UPDATE collection_blocks SET ' + updates.join(', ') + ' WHERE id = ?').run(...params);
+            }
         } else if (block.block_type === 'media') {
             const hasMediaIds = Object.prototype.hasOwnProperty.call(req.body, 'media_ids');
             const hasTitle = Object.prototype.hasOwnProperty.call(req.body, 'title');

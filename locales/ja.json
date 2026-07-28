@@ -212,7 +212,7 @@
       "uploadImageOnly": "画像ファイルをアップロードしてください。",
       "confirmDeleteCollection": "このコレクションを削除してもよろしいですか？コレクションとそのすべてのメディアが削除され、元に戻すことはできません。",
       "blockLayout": "コンテンツレイアウト",
-      "blockLayoutHint": "ドラッグでブロックの順序を調整し、公開ページのレイアウトを制御；テキストブロックは複数追加可能、メディアブロックはレポートとアンソロジーモードで複数追加可能",
+      "blockLayoutHint": "ドラッグでブロックの順序を調整し、公開ページのレイアウトを制御；テキストブロックは複数追加可能、メディアブロックはレポート、アンソロジーとアーカイブモードで複数追加可能",
       "contentLayout": "コンテンツレイアウト",
       "contentLayoutHint": "ドラッグでメディアとテキストブロックの順序を調整し、公開ページのレイアウトを制御；保存後に公開すると公開ページに反映されます",
       "mediaManagement": "メディア管理",
@@ -224,6 +224,7 @@
       "dragToReorder": "ドラッグで並べ替え",
       "anthologyTitle": "アンソロジータイトル",
       "anthologyTitlePlaceholder": "アンソロジータイトルを入力",
+      "documentTitlePlaceholder": "ドキュメントタイトルを入力",
       "saveTitle": "タイトルを保存",
       "addTextBlock": "+ ステートメントブロックを追加",
       "addMediaBlock": "+ メディアブロックを追加",
@@ -430,6 +431,7 @@
       "wall": "ウォール",
       "report": "レポート",
       "anthology": "アンソロジー",
+      "archiving": "アーカイブ",
       "video": "動画"
     },
     "common": {

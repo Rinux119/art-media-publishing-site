@@ -34,6 +34,8 @@ cellColor="#949494";
   <div id="stage">
     <% if (resolvedDisplayType === 'anthology') { %>
       <%- include('./partials/collection/anthology-layout', { blocks, collection }) %>
+    <% } else if (resolvedDisplayType === 'archiving') { %>
+      <%- include('./partials/collection/archiving-layout', { blocks, collection }) %>
     <% } else if (typeof blocks !== 'undefined' && Array.isArray(blocks) && blocks.length > 0) { %>
       <%- include('./partials/collection/standard-media-block', { blocks, collection, gridClass: gridClass + anthologySubClass, resolvedDisplayType, wallBatchSize, getLargeUrl, activeBlockId }) %>
     <% } else { %>
@@ -59,12 +61,12 @@ cellColor="#949494";
   </div>
   <div class="lightbox-report"></div>
 </div>
-<% const blockMediaItems = resolvedDisplayType === 'anthology' ? [] : ((typeof blocks !== 'undefined' && Array.isArray(blocks)) ? blocks.filter(b => b.blockType === 'media').flatMap(b => b.media || []) : media); %>
+<% const blockMediaItems = (resolvedDisplayType === 'anthology' || resolvedDisplayType === 'archiving') ? [] : ((typeof blocks !== 'undefined' && Array.isArray(blocks)) ? blocks.filter(b => b.blockType === 'media').flatMap(b => b.media || []) : media); %>
 <script id="wall-items-json" type="application/json"><%- JSON.stringify(blockMediaItems) %></script>
-<% if (resolvedDisplayType !== 'anthology') { %>
+<% if (resolvedDisplayType !== 'anthology' && resolvedDisplayType !== 'archiving') { %>
 <script type="text/javascript" src="<%= assetUrl('/resources/js/lightbox.js') %>"></script>
 <% } %>
-<% if (resolvedDisplayType !== 'report' && resolvedDisplayType !== 'anthology') { %>
+<% if (resolvedDisplayType !== 'report' && resolvedDisplayType !== 'anthology' && resolvedDisplayType !== 'archiving') { %>
 <script type="text/javascript" src="<%= assetUrl('/resources/js/public-collection.js') %>"></script>
 <% } %>
 </body>
