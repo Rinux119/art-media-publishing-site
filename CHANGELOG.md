@@ -6,6 +6,12 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.20.4] - 2026-07-27
+
+### Fixed
+
+- 修复 Lightbox 大图查看中作品阐述文字与图片间距过大：移除 `.lightbox-body` 的 `height: 100%`，让文字紧贴图片下方；`.lightbox-report` 顶部 padding 由 16px 减至 6px（移动端由 12px 减至 4px）
+
 ## [2.20.3] - 2026-07-27
 
 ### Fixed
