@@ -6,6 +6,12 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.20.3] - 2026-07-27
+
+### Fixed
+
+- 修复 Lightbox 大图查看中作品阐述文字未与图片左对齐的问题：新增 `alignReportToMedia` 动态计算 `.lightbox-media-wrap` 的位置并设置 `.lightbox-report` 的左右 padding，使文字内容区域与图片容器左右对齐；diptych 模式下文字与左边图片左对齐；窗口尺寸变化时自动重算
+
 ## [2.20.2] - 2026-07-27
 
 ### Changed
