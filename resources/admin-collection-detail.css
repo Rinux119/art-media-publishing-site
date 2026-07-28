@@ -76,11 +76,15 @@
         }
         .toolbar-box,
         .panel-soft {
-            margin-bottom: 10px;
-            padding: 12px 0;
-            border-top: 1px solid #ececec;
-            border-bottom: 1px solid #ececec;
+            margin-bottom: 12px;
+            padding: 14px 16px;
+            border: 1px solid #ececec;
             background: #fafafa;
+        }
+        .panel-soft {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
         .stat-pill,
         .badge {
@@ -319,9 +323,9 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px dashed #e3e3e3;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
 }
 .block-card-title-preview {
     font-size: 13px;
@@ -429,8 +433,9 @@
     transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 .btn-delete-block:hover { color: #8b3a3a; border-color: #c99595; background: #fff8f8; }
+.block-text-editor { display: flex; flex-direction: column; gap: 12px; }
 .block-text-editor textarea { min-height: 480px; font-family: "Courier New", monospace; }
-.block-text-actions { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+.block-text-actions { display: flex; align-items: center; gap: 8px; }
 .btn-draft-delete {
     background: #fff;
     border: 1px solid #b5b5b5;
@@ -449,7 +454,7 @@
 .block-card-media .media-grid {
     margin-top: 14px;
 }
-.block-add-bar { margin-top: 16px; display: flex; gap: 8px; }
+.block-add-bar { margin-top: 16px; margin-bottom: 24px; display: flex; gap: 8px; }
 .btn-add-block {
     padding: 8px 16px;
     border: 1px dashed #aaa;

@@ -111,10 +111,12 @@
                     </div>
                     <div class="block-card-body">
                         <div class="block-text-editor">
-                            <div class="block-title-row" data-block-id="<%= block.id %>">
-                                <input type="text" id="block-title-<%= block.id %>" class="block-title-input" name="block_title" value="<%= block.title || '' %>" placeholder="<%= __('admin.collectionDetail.documentTitlePlaceholder') %>" maxlength="120" data-block-id="<%= block.id %>">
-                                <button type="button" class="btn-secondary btn-save-block-title" data-block-id="<%= block.id %>"><%= __('admin.collectionDetail.saveTitle') %></button>
-                                <span class="autosave-status block-title-status" data-block-id="<%= block.id %>" aria-live="polite"></span>
+                            <div class="panel-soft">
+                                <div class="block-title-row" data-block-id="<%= block.id %>">
+                                    <input type="text" id="block-title-<%= block.id %>" class="block-title-input" name="block_title" value="<%= block.title || '' %>" placeholder="<%= __('admin.collectionDetail.documentTitlePlaceholder') %>" maxlength="120" data-block-id="<%= block.id %>">
+                                    <button type="button" class="btn-secondary btn-save-block-title" data-block-id="<%= block.id %>"><%= __('admin.collectionDetail.saveTitle') %></button>
+                                    <span class="autosave-status block-title-status" data-block-id="<%= block.id %>" aria-live="polite"></span>
+                                </div>
                             </div>
                             <textarea name="markdown" placeholder="<%= __('admin.collectionDetail.reportPlaceholder') %>"><%= block.markdown || '' %></textarea>
                             <div class="block-text-actions">
