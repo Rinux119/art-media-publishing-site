@@ -6,6 +6,17 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.20.5] - 2026-07-28
+
+### Fixed
+
+- 修复页脚「显示信息」模式下添加多条社交链接时的样式错乱：删除脆弱的 `#contact > a:nth-child(3)` 位置选择器（当社交链接≥2条时会误中第2条链接，使其变成备案号同款灰色9px小字，同时备案号反而脱离该规则变回正常字号），改用 `.footer-compact-meta` class 精确命中备案号；首页页脚备案号补上 `footer-compact-meta` class，与作品集页脚保持一致
+- 修复社交链接标签被挤压换行：`#contact > a` 和 `#contact > a > p.textColor` 的固定 `width: 60px` 改为 `auto`，长标签（如 "Open Source Project"）不再被压窄
+
+### Changed
+
+- 调整页脚各行间距：社交链接与备案号的 `margin-top` 由 `5px` 改为 `2px`，行与行更贴近
+
 ## [2.20.4] - 2026-07-27
 
 ### Fixed
