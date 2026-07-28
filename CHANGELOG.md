@@ -6,6 +6,12 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.21.1] - 2026-07-28
+
+### Fixed
+
+- 修复作品阐述文本框上传图片/视频时返回 403 Forbidden：CSRF 中间件在 multer 解析 multipart body 之前执行，读不到 `req.body._csrf`，改为通过 `X-CSRF-Token` header 发送 token，与现有 fetch 调用保持一致
+
 ## [2.21.0] - 2026-07-28
 
 ### Added

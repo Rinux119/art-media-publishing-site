@@ -574,7 +574,6 @@
         const uploadMediaToLibrary = (file, btn) => {
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('_csrf', _csrfToken);
             const textarea = findTextareaForButton(btn);
             const statusEl = btn.parentElement.querySelector('.autosave-status');
             const originalText = btn.textContent;
@@ -586,6 +585,7 @@
             }
             fetch('/admin/media-library/upload', {
                 method: 'POST',
+                headers: { 'X-CSRF-Token': _csrfToken },
                 body: formData,
                 credentials: 'same-origin'
             }).then((res) => res.json()).then((data) => {
