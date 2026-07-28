@@ -50,6 +50,7 @@
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <textarea name="report_markdown" placeholder="<%= __('admin.collectionDetail.reportPlaceholder') %>"><%= media.report_markdown || '' %></textarea>
             <div class="report-media-actions">
+                <button type="button" class="btn-secondary media-library-upload-btn" data-target="<%= media.id %>"><%= __('admin.collectionDetail.uploadToDescription') %></button>
                 <button type="submit" class="btn-primary"><%= __('admin.collectionDetail.saveText') %></button>
                 <span class="autosave-status" data-role="autosave-status" aria-live="polite"></span>
             </div>

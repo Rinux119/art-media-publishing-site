@@ -39,7 +39,15 @@ const registerAdminRoutes = ({
     getVisitsSorted,
     getVisitStats,
     invalidateSiteConfigCache,
-    getMediaConfig
+    getMediaConfig,
+    getMediaLibraryRootDir,
+    getMediaLibraryDir,
+    getMediaLibraryVideoDir,
+    getMediaLibraryUrl,
+    ensureMediaLibraryDirs,
+    cleanupMediaLibraryOrphans,
+    removeMediaLibraryFile,
+    ensureMediaLibraryImageVariants
 } = {}) => {
     const PASSWD_RESET_MAX_KEY_FAILURES = 3;
     const PASSWD_RESET_LOCK_MS = 24 * 60 * 60 * 1000;
@@ -581,6 +589,7 @@ const registerAdminRoutes = ({
         const reportMarkdown = typeof (req.body || {}).report_markdown === 'string' ? req.body.report_markdown : '';
         db.prepare('UPDATE collections SET report_markdown = ? WHERE id = ?').run(reportMarkdown, req.params.id);
         const row = db.prepare('SELECT slug FROM collections WHERE id = ?').get(req.params.id);
+        try { cleanupMediaLibraryOrphans(); } catch (_) {}
 
         if (wantsJson(req)) {
             return res.json({
@@ -604,6 +613,7 @@ const registerAdminRoutes = ({
             JOIN collections ON collections.id = media.collection_id
             WHERE media.id = ?
         `).get(req.params.id);
+        try { cleanupMediaLibraryOrphans(); } catch (_) {}
 
         if (wantsJson(req)) {
             return res.json({
@@ -616,6 +626,88 @@ const registerAdminRoutes = ({
             });
         }
         return res.redirect(row ? `/admin/collections/${row.collectionId}` : '/admin');
+    });
+
+    // 媒体库上传：用于在作品阐述 markdown 文本框中插入图片/视频
+    // 上传后保存到 content/media_library/，并通过 sharp/ffmpeg 处理
+    // 没有任何 markdown 文本框引用的文件会被自动清理
+    const multer = require('multer');
+    const mediaLibraryStorage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            const ext = path.extname(file.originalname || '').toLowerCase();
+            const isVideo = isVideoFile(file.originalname) && /^video\//i.test(file.mimetype || '');
+            const isImage = isImageFile(file.originalname) && /^image\//i.test(file.mimetype || '');
+            let dir;
+            if (isVideo) dir = getMediaLibraryVideoDir();
+            else if (isImage) dir = getMediaLibraryDir('original');
+            else dir = getMediaLibraryDir('large');
+            fs.ensureDirSync(dir);
+            cb(null, dir);
+        },
+        filename: (req, file, cb) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            const ext = path.extname(file.originalname || '').toLowerCase();
+            const isVideo = isVideoFile(file.originalname) && /^video\//i.test(file.mimetype || '');
+            cb(null, uniqueSuffix + (isVideo ? '.mp4' : ext));
+        }
+    });
+    const mediaLibraryUpload = multer({
+        storage: mediaLibraryStorage,
+        limits: { fileSize: 300 * 1024 * 1024 },
+        fileFilter: (req, file, cb) => {
+            const ext = path.extname(file.originalname || '').toLowerCase();
+            const isAllowedImage = isImageFile(file.originalname) && /^image\//i.test(file.mimetype || '');
+            const isAllowedVideo = isVideoFile(file.originalname) && /^video\//i.test(file.mimetype || '');
+            if (isAllowedImage || isAllowedVideo) return cb(null, true);
+            return cb(new Error('Only images/videos are allowed'));
+        }
+    });
+
+    app.post('/admin/media-library/upload', requireAuth, (req, res, next) => {
+        mediaLibraryUpload.single('file')(req, res, (err) => {
+            if (err) {
+                return res.status(400).json({ success: false, error: err.message || 'Upload failed' });
+            }
+            if (!req.file) {
+                return res.status(400).json({ success: false, error: 'No file uploaded' });
+            }
+            const file = req.file;
+            const filename = file.filename;
+            const isVideo = isVideoFile(file.originalname);
+
+            if (isVideo) {
+                enqueueBackgroundVideoTask(async () => {
+                    try {
+                        await videoProcessor.processUploadedVideo(file.path, getMediaLibraryVideoDir(), { throwOnError: false });
+                    } catch (err) {
+                        console.error('Media library video processing failed:', err);
+                    }
+                });
+                return res.json({
+                    success: true,
+                    filename,
+                    url: getMediaLibraryUrl('video', filename),
+                    isVideo: true,
+                    markdown: `<video controls src="${getMediaLibraryUrl('video', filename)}"></video>`
+                });
+            }
+
+            enqueueBackgroundImageTask(async () => {
+                try {
+                    await ensureMediaLibraryImageVariants(filename, { priority: 'low' });
+                    await compressOriginalImageInPlace(path.join(getMediaLibraryDir('original'), filename), { priority: 'low' });
+                } catch (err) {
+                    console.error('Media library image processing failed:', err);
+                }
+            });
+            return res.json({
+                success: true,
+                filename,
+                url: getMediaLibraryUrl('large', filename),
+                isVideo: false,
+                markdown: `![${file.originalname.replace(/\.[^.]+$/, '')}](${getMediaLibraryUrl('large', filename)})`
+            });
+        });
     });
 
     app.post('/admin/collections/toggle-hidden/:id', requireAuth, (req, res) => {

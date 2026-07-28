@@ -30,6 +30,7 @@ For PRs, I'll do my best to understand the code you submit, but I can't promise 
 ### Admin Dashboard
 - Login authentication, user management, homepage media management, collection management
 - Media upload, sorting, draft/publish workflow
+- Artist statement text boxes support direct image/video upload: uploaded files are saved to `content/media_library/`, processed via sharp/ffmpeg, and Markdown references are auto-inserted at the cursor; files not referenced by any text box are automatically cleaned up
 - Block-based content editing: artist statement blocks and media management blocks displayed independently, collapsible, draggable for reordering, adjustable via "Move Up/Move Down" buttons; each media block supports independent image/video upload
 
 ### Collection Visibility Controls

@@ -259,12 +259,32 @@ function getMediaConfig() {
     };
 }
 
+const { createMediaLibraryService } = require('./lib/media-library');
+const mediaLibraryService = createMediaLibraryService({
+    fs,
+    path,
+    contentRoot: CONTENT_ROOT,
+    db,
+    isSafePathSegment,
+    logger: console
+});
+const {
+    getMediaLibraryRootDir,
+    getMediaLibraryDir,
+    getMediaLibraryVideoDir,
+    getMediaLibraryUrl,
+    ensureDirs: ensureMediaLibraryDirs,
+    cleanupOrphanedFiles: cleanupMediaLibraryOrphans,
+    removeMediaLibraryFile
+} = mediaLibraryService;
+
 const {
     compressOriginalImageInPlace,
     withGenerationLock,
     generateImageVariant,
     ensureCollectionImageVariants,
-    ensureRootImageVariants
+    ensureRootImageVariants,
+    ensureMediaLibraryImageVariants
 } = createImageVariantService({
     fs,
     path,
@@ -273,6 +293,7 @@ const {
     withImageProcessing,
     getCollectionMediaDir,
     getRootImagesDir,
+    getMediaLibraryDir,
     getFileExt,
     isImageFile,
     getMediaConfig,
@@ -338,7 +359,15 @@ registerAdminRoutes({
     getVisitsSorted,
     getVisitStats,
     invalidateSiteConfigCache,
-    getMediaConfig
+    getMediaConfig,
+    getMediaLibraryRootDir,
+    getMediaLibraryDir,
+    getMediaLibraryVideoDir,
+    getMediaLibraryUrl,
+    ensureMediaLibraryDirs,
+    cleanupMediaLibraryOrphans,
+    removeMediaLibraryFile,
+    ensureMediaLibraryImageVariants
 });
 
 const publicRoutesResult = _registerPublicRoutes({
@@ -446,6 +475,41 @@ const rootMediaHandler = createMediaRequestHandler({
 app.get('/content/:collectionSlug/content/images/:size/:filename', collectionMediaHandler);
 app.get('/content/images/:size/:filename', rootMediaHandler);
 
+const mediaLibraryHandler = createMediaRequestHandler({
+    isSafePathSegment,
+    isVideoFile,
+    isImageFile,
+    isSupportedImageVariantSize,
+    getFileExt,
+    getMediaConfig,
+    withImageProcessing,
+    sharp,
+    sharpInputOptions: SHARP_INPUT_OPTIONS,
+    withGenerationLock,
+    generateImageVariant,
+    applyMediaCache,
+    getParams: (req) => ({
+        scopeKey: 'media_library',
+        size: req.params.size,
+        filename: req.params.filename
+    }),
+    getExistingVideoPath: ({ filename }) => {
+        const videoPath = path.join(getMediaLibraryVideoDir(), filename);
+        return fs.existsSync(videoPath) ? videoPath : null;
+    },
+    getExistingVariantPath: ({ size, filename }) => {
+        const filePath = path.join(getMediaLibraryDir(size), filename);
+        return fs.existsSync(filePath) ? filePath : null;
+    },
+    buildVariantPath: ({ size, filename }) => path.join(getMediaLibraryDir(size), filename),
+    resolveSourcePath: ({ filename }) => {
+        const originalPath = path.join(getMediaLibraryDir('original'), filename);
+        return fs.existsSync(originalPath) ? originalPath : null;
+    },
+    getLockKey: ({ size, filename }) => `media_library::${size}::${filename}`
+});
+app.get('/content/media_library/:size/:filename', mediaLibraryHandler);
+
 app.use('/resources', express.static(path.join(__dirname, 'resources'), {
     setHeaders: (res, filePath) => setCacheControl(res, guessStrongCachePolicyForFilePath(res, filePath))
 }));
@@ -493,7 +557,16 @@ module.exports = {
 };
 
 if (require.main === module) {
-    markedReady.then(() => startServer()).catch((err) => {
+    markedReady.then(() => {
+        try {
+            ensureMediaLibraryDirs();
+            const removed = cleanupMediaLibraryOrphans();
+            if (removed > 0) console.log(`Media library: cleaned ${removed} orphan file(s) on startup.`);
+        } catch (err) {
+            console.error('Media library startup cleanup failed:', err);
+        }
+        startServer();
+    }).catch((err) => {
         console.error('Failed to start server:', err);
         process.exit(1);
     });

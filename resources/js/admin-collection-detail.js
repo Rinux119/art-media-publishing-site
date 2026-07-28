@@ -533,3 +533,109 @@
                 publishUpdates();
             });
         }
+
+        // 媒体库上传：在 markdown 文本框中插入图片/视频
+        const findTextareaForButton = (btn) => {
+            const target = btn.dataset.target;
+            if (!target) return null;
+            if (target === 'collection-report-form') {
+                const form = document.getElementById('collection-report-form');
+                return form ? form.querySelector('textarea[name="report_markdown"]') : null;
+            }
+            if (target && target.startsWith('block-')) {
+                const blockId = target.slice(6);
+                const editor = document.querySelector('.block-text-editor');
+                const btn2 = document.querySelector('.btn-save-text-block[data-block-id="' + blockId + '"]');
+                return btn2 ? btn2.closest('.block-text-editor').querySelector('textarea[name="markdown"]') : null;
+            }
+            // media-item 的 target 是 mediaId
+            const form = document.querySelector('.report-media-form[action*="/admin/media/update-report/' + target + '"]');
+            return form ? form.querySelector('textarea[name="report_markdown"]') : null;
+        };
+
+        const insertMarkdownToTextarea = (textarea, markdown) => {
+            if (!textarea || !markdown) return;
+            const start = textarea.selectionStart || 0;
+            const end = textarea.selectionEnd || 0;
+            const before = textarea.value.slice(0, start);
+            const after = textarea.value.slice(end);
+            const needsNewlineBefore = before.length > 0 && !before.endsWith('\n') && !before.endsWith('\n\n');
+            const prefix = needsNewlineBefore ? '\n\n' : (before.endsWith('\n\n') ? '' : (before.length > 0 ? '\n' : ''));
+            const needsNewlineAfter = after.length > 0 && !after.startsWith('\n') && !after.startsWith('\n\n');
+            const suffix = needsNewlineAfter ? '\n' : '';
+            textarea.value = before + prefix + markdown + suffix + after;
+            const cursor = (before + prefix + markdown + suffix).length;
+            textarea.selectionStart = cursor;
+            textarea.selectionEnd = cursor;
+            textarea.focus();
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        };
+
+        const uploadMediaToLibrary = (file, btn) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('_csrf', _csrfToken);
+            const textarea = findTextareaForButton(btn);
+            const statusEl = btn.parentElement.querySelector('.autosave-status');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = t.collectionDetail.uploadingToDescription || 'Uploading...';
+            if (statusEl) {
+                statusEl.textContent = t.collectionDetail.uploadingToDescription || 'Uploading...';
+                statusEl.classList.add('is-saving');
+            }
+            fetch('/admin/media-library/upload', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            }).then((res) => res.json()).then((data) => {
+                if (data && data.success && data.markdown) {
+                    insertMarkdownToTextarea(textarea, data.markdown);
+                    if (statusEl) {
+                        statusEl.textContent = t.collectionDetail.mediaLibraryUploaded || 'Inserted';
+                        statusEl.classList.remove('is-saving');
+                        statusEl.classList.add('is-saved');
+                        window.setTimeout(() => {
+                            statusEl.textContent = '';
+                            statusEl.classList.remove('is-saved');
+                        }, 2000);
+                    }
+                } else {
+                    const errMsg = (data && data.error) || (t.collectionDetail.uploadToDescriptionFailed || 'Upload failed');
+                    if (statusEl) {
+                        statusEl.textContent = errMsg;
+                        statusEl.classList.remove('is-saving');
+                        statusEl.classList.add('is-error');
+                    } else {
+                        showPageNotice(errMsg, true);
+                    }
+                }
+            }).catch((err) => {
+                const errMsg = t.collectionDetail.uploadToDescriptionFailed || 'Upload failed';
+                if (statusEl) {
+                    statusEl.textContent = errMsg;
+                    statusEl.classList.remove('is-saving');
+                    statusEl.classList.add('is-error');
+                } else {
+                    showPageNotice(errMsg, true);
+                }
+            }).finally(() => {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            });
+        };
+
+        document.querySelectorAll('.media-library-upload-btn').forEach((btn) => {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*,video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.wmv,.flv';
+            fileInput.style.display = 'none';
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files && fileInput.files[0]) {
+                    uploadMediaToLibrary(fileInput.files[0], btn);
+                    fileInput.value = '';
+                }
+            });
+            document.body.appendChild(fileInput);
+            btn.addEventListener('click', () => fileInput.click());
+        });

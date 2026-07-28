@@ -113,6 +113,7 @@
                         <div class="block-text-editor">
                             <textarea name="markdown" placeholder="<%= __('admin.collectionDetail.reportPlaceholder') %>"><%= block.markdown || '' %></textarea>
                             <div class="block-text-actions">
+                                <button type="button" class="btn-secondary media-library-upload-btn" data-target="block-<%= block.id %>"><%= __('admin.collectionDetail.uploadToDescription') %></button>
                                 <button type="button" class="btn-primary btn-save-text-block" data-block-id="<%= block.id %>"><%= __('admin.collectionDetail.saveText') %></button>
                                 <span class="autosave-status" data-role="block-save-status"></span>
                             </div>

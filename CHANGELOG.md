@@ -6,6 +6,13 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.21.0] - 2026-07-28
+
+### Added
+
+- 作品阐述（Markdown 文本框）新增「上传图片/视频到阐述」功能：在作品集级阐述、媒体项级阐述、文字区块的三类文本框旁新增上传按钮，点击后选择文件，上传完成后自动在光标位置插入 Markdown 引用（图片为 `![alt](url)`，视频为 `<video controls src="url"></video>`）；上传的文件保存到 `content/media_library/`，图片经 sharp 生成 thumb/medium/large 变体并压缩原图，视频经 ffmpeg 转码为 H.264 MP4
+- 媒体库孤儿文件自动清理：扫描数据库中所有 markdown 文本框（`collections.report_markdown`/`published_report_markdown`、`media.report_markdown`/`published_report_markdown`、`collection_blocks.markdown`/`published_markdown`）引用的文件名，与 `content/media_library/` 中的实际文件对比，删除没有任何文本框引用的文件。清理时机：服务启动时、保存阐述后、发布更新后
+
 ## [2.20.5] - 2026-07-28
 
 ### Fixed
