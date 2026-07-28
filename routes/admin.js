@@ -824,7 +824,7 @@ const registerAdminRoutes = ({
                 let existingIds = [];
                 try { existingIds = JSON.parse(block.media_ids || '[]'); } catch (_) { existingIds = []; }
                 if (!Array.isArray(existingIds)) existingIds = [];
-                const mergedIds = existingIds.concat(newMediaIds);
+                const mergedIds = newMediaIds.concat(existingIds);
                 db.prepare('UPDATE collection_blocks SET media_ids = ? WHERE id = ?').run(JSON.stringify(mergedIds), blockId);
             }
         }
