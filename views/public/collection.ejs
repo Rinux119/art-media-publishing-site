@@ -28,7 +28,9 @@ cellColor="#949494";
   <%- include('./partials/collection/site-header', { shouldHideInfo, collections, assetUrl }) %>
 
   <% const gridClass = resolvedDisplayType === 'wall' ? 'wall-grid' : (resolvedDisplayType === 'diptych' ? 'thumb-grid thumb-grid-diptych' : 'thumb-grid thumb-grid-single'); %>
-  <% const anthologySubClass = (typeof blockId !== 'undefined' && blockId) ? ' thumb-grid-anthology-sub' : ''; %>
+  <% const firstBlockMediaFormat = (typeof blocks !== 'undefined' && Array.isArray(blocks) && blocks[0]) ? (blocks[0].mediaFormat || '') : ''; %>
+  <% const isAspectRatioFormat = !!firstBlockMediaFormat && !['single', 'diptych', 'wall', 'report'].includes(firstBlockMediaFormat); %>
+  <% const anthologySubClass = (typeof blockId !== 'undefined' && blockId && resolvedDisplayType === 'single' && isAspectRatioFormat) ? ' thumb-grid-anthology-sub' : ''; %>
   <% const reportImageCount = Array.isArray(media) ? media.length : 0; %>
   <% const reportColumnCount = reportImageCount <= 3 ? Math.max(1, reportImageCount) : Math.ceil(Math.sqrt(reportImageCount)); %>
   <div id="stage">

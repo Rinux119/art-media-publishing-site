@@ -1,5 +1,8 @@
 const { wantsJson } = require('../lib/http-utils');
 
+// 区块级 media_format 中的"展示方式"取值，用于在 anthology/archiving 子页和大图页切换布局
+const BLOCK_DISPLAY_MODES = new Set(['single', 'diptych', 'wall', 'report']);
+
 let _dataCacheForCache = null;
 
 const registerPublicRoutes = ({
@@ -332,6 +335,7 @@ const registerPublicRoutes = ({
 
         let block;
         let blockMedia = [];
+        let effectiveDisplayType = 'single';
         if (rawBlock.block_type === 'media') {
             const rawMedia = getPublishedMediaByCollectionId(collection.id);
             const processedMedia = rawMedia.map((mediaItem) => {
@@ -349,7 +353,10 @@ const registerPublicRoutes = ({
 
             if (blockMedia.length === 0) return renderNotFound(req, res);
 
-            block = { id: rawBlock.id, blockType: 'media', orderIndex: rawBlock.order_index, title: rawBlock.title || '', media: blockMedia, mediaFormat: rawBlock.media_format || '3:2' };
+            const blockMediaFormat = rawBlock.media_format || '3:2';
+            const isDisplayModeFormat = BLOCK_DISPLAY_MODES.has(blockMediaFormat);
+            effectiveDisplayType = isDisplayModeFormat ? blockMediaFormat : 'single';
+            block = { id: rawBlock.id, blockType: 'media', orderIndex: rawBlock.order_index, title: rawBlock.title || '', media: blockMedia, mediaFormat: blockMediaFormat };
         } else if (rawBlock.block_type === 'text') {
             const html = renderMarkdown(rawBlock.markdown || '');
             block = { id: rawBlock.id, blockType: 'text', orderIndex: rawBlock.order_index, title: rawBlock.title || '', markdown: rawBlock.markdown || '', html };
@@ -365,7 +372,7 @@ const registerPublicRoutes = ({
                 renderHtml: () => new Promise((resolve, reject) => {
                     res.render('public/collection', {
                         collection: publicCollection,
-                        displayType: 'single',
+                        displayType: effectiveDisplayType,
                         blockId: blockIdNum,
                         reportHtml,
                         media: blockMedia,
@@ -399,7 +406,8 @@ const registerPublicRoutes = ({
         if (isCollectionAccessBlocked(collection)) return renderNotFound(req, res);
 
         const publicCollection = toPublicCollection(collection);
-        const displayType = normalizeCollectionDisplayType(publicCollection.display_type);
+        const collectionDisplayType = normalizeCollectionDisplayType(publicCollection.display_type);
+        let displayType = collectionDisplayType;
         let mediaList = getPublishedMediaByCollectionId(collection.id);
 
         const blockQuery = req.query && req.query.block ? String(req.query.block) : '';
@@ -407,13 +415,17 @@ const registerPublicRoutes = ({
         if (blockQuery && /^\d+$/.test(blockQuery)) {
             activeBlockId = Number(blockQuery);
             const rawBlock = db.prepare(
-                'SELECT published_media_ids AS media_ids FROM collection_blocks WHERE id = ? AND collection_id = ? AND is_published = 1 AND is_deleted_draft = 0'
+                'SELECT published_media_ids AS media_ids, published_media_format AS media_format FROM collection_blocks WHERE id = ? AND collection_id = ? AND is_published = 1 AND is_deleted_draft = 0'
             ).get(activeBlockId, collection.id);
             if (rawBlock) {
                 let blockMediaIds = [];
                 try { blockMediaIds = JSON.parse(rawBlock.media_ids || '[]'); } catch (_) { blockMediaIds = []; }
                 const idSet = new Set(blockMediaIds);
                 mediaList = mediaList.filter((m) => idSet.has(m.id));
+                // anthology/archiving 子页点击进入大图页时，按 block 的展示方式决定大图布局
+                if ((collectionDisplayType === 'anthology' || collectionDisplayType === 'archiving') && rawBlock.media_format && BLOCK_DISPLAY_MODES.has(rawBlock.media_format)) {
+                    displayType = rawBlock.media_format;
+                }
             }
         }
 

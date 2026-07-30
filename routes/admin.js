@@ -1066,7 +1066,7 @@ const registerAdminRoutes = ({
                 params.push(title);
             }
             if (hasMediaFormat) {
-                const allowedFormats = ['3:2', '2:3', '2.7:1', '4:3', '1:1', '1.16:1', '1.37:1', '2.25:1', '3:1', '5:4'];
+                const allowedFormats = ['single', 'diptych', 'wall', 'report', '3:2', '2:3', '2.7:1', '4:3', '1:1', '1.16:1', '1.37:1', '2.25:1', '3:1', '5:4'];
                 let format = typeof req.body.media_format === 'string' ? req.body.media_format : '3:2';
                 if (!allowedFormats.includes(format)) format = '3:2';
                 updates.push('media_format = ?');

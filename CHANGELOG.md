@@ -6,6 +6,16 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.26.0] - 2026-07-30
+
+### Fixed
+
+- 修复 anthology/archiving 子页未按区块级展示方式渲染的问题：路由 `/:slug/:blockId` 原本硬编码 `displayType: 'single'`，导致 media block 选择的「单幅瀑布流 / 双联画 / 照片墙 / 报告」四种展示方式在前台一律按单幅瀑布流渲染。现在按 `block.media_format` 决定子页布局，diptych 走双联画布局、wall 走照片墙布局、report 走图文混排布局
+- 修复管理端更新区块 `media_format` 时「展示方式」取值（single/diptych/wall/report）被白名单校验重置为 `3:2` 的问题：`routes/admin.js` 的 `allowedFormats` 仅含画幅比例，现已补入四种展示方式取值
+- 修复子页 `thumb-grid-anthology-sub` 类与 `data-media-format` 属性的误叠加：当 `media_format` 属于展示方式取值时不再叠加该类与属性，避免 4 列网格 + `aspect-ratio` + `object-fit: contain` 样式覆盖 single/diptych/wall/report 的标准布局
+- 修复 anthology/archiving 子页大图页未按区块展示方式渲染的问题：`/:slug/:filename_large?block=:id` 现读取该 block 的 `published_media_format`，diptych 时按双图并排展示
+- 补全 anthology/archiving 子页选「报告」展示方式时的「返回上一级」链接
+
 ## [2.25.0] - 2026-07-30
 
 ### Changed
