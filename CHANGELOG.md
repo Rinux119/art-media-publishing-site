@@ -6,6 +6,19 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.27.0] - 2026-07-30
+
+### Tests
+
+- 补全 anthology / archiving 二级路由与区块级 `media_format` 的测试覆盖（14 个用例）：
+  - 子页按 `block.media_format` 渲染：single 不叠加 `thumb-grid-anthology-sub`、diptych 走双联画布局、wall 走照片墙布局、report 走图文混排布局、3:2 等画幅比例叠加 `thumb-grid-anthology-sub` 与 `data-media-format`
+  - 管理端 `allowedFormats` 白名单校验：展示方式取值（single/diptych/wall/report）通过、非法值被重置为 `3:2`
+  - 发布流程：`published_media_format` 与 `media_format` 同步
+  - 大图页：anthology 子页 diptych 渲染双图 hero
+  - 首页布局：anthology 渲染封面网格与标题、空标题 block 不渲染占位、archiving 渲染纯文字列表且不含图
+  - 子页底部「返回上一级」链接
+  - archiving 子页与 anthology 子页渲染一致
+
 ## [2.26.0] - 2026-07-30
 
 ### Fixed

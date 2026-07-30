@@ -62,7 +62,7 @@ For PRs, I'll do my best to understand the code you submit, but I can't promise 
 - **Visit logging**: public page IP/path/timestamp recording with auto-cleanup
 - **Session persistence**: sessions stored in SQLite, survive server restarts
 - **Graceful shutdown**: connection tracking, health/readiness checks, 404/500 fallbacks
-- **Automated tests**: 77 integration tests + 11 unit tests covering core workflows, security, and edge cases
+- **Automated tests**: 91 integration tests + 11 unit tests covering core workflows, security, and edge cases, including anthology / archiving sub-page routing and block-level `media_format` rendering
 
 ## Requirements
 

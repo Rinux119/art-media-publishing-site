@@ -2386,3 +2386,286 @@ test('i18n：设置页面包含语言选项', async () => {
   assert.match(html, /zh-TW/);
   assert.match(html, /value="en"/);
 });
+
+// =============================================================================
+// anthology / archiving 二级路由与区块级 media_format 测试
+// =============================================================================
+
+const createMediaBlock = async ({ sessionCookie, csrfToken, collectionId, title = '' }) => {
+  const response = await adminJsonPost(`${baseUrl}/admin/collections/${collectionId}/blocks/add`, {
+    sessionCookie,
+    csrfToken,
+    body: { block_type: 'media' }
+  });
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(payload.success, true);
+  const blockId = Number(payload.block.id);
+  if (title) {
+    await adminFormPost(`${baseUrl}/admin/collections/${collectionId}/blocks/${blockId}/update`, {
+      sessionCookie,
+      csrfToken,
+      body: { title }
+    });
+  }
+  return blockId;
+};
+
+const updateBlockMediaFormat = async ({ sessionCookie, csrfToken, collectionId, blockId, mediaFormat }) => {
+  return adminFormPost(`${baseUrl}/admin/collections/${collectionId}/blocks/${blockId}/update`, {
+    sessionCookie,
+    csrfToken,
+    body: { media_format: mediaFormat }
+  });
+};
+
+const attachMediaToBlock = ({ blockId, mediaIds }) => {
+  db.prepare('UPDATE collection_blocks SET media_ids = ? WHERE id = ?').run(JSON.stringify(mediaIds.map((id) => Number(id))), blockId);
+};
+
+const createAnthologyCollectionWithBlock = async ({ sessionCookie, csrfToken, name = 'Anthology Test', displayType = 'anthology' }) => {
+  const collection = await createCollectionThroughAdmin({
+    sessionCookie,
+    csrfToken,
+    name,
+    slug: `${displayType}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    displayType
+  });
+  const blockId = await createMediaBlock({ sessionCookie, csrfToken, collectionId: collection.id, title: `${name} 子集` });
+  return { collection, blockId };
+};
+
+const uploadAndAttachMediasToBlock = async ({ sessionCookie, csrfToken, collectionId, blockId, count = 2 }) => {
+  const mediaIds = [];
+  for (let i = 0; i < count; i++) {
+    const media = await uploadMediaToCollectionThroughAdmin({
+      sessionCookie,
+      csrfToken,
+      collectionId,
+      filename: `block-${blockId}-${i}.jpg`,
+      imageBuffer: await createTestImageBuffer()
+    });
+    mediaIds.push(media.id);
+  }
+  attachMediaToBlock({ blockId, mediaIds });
+  return mediaIds;
+};
+
+test('anthology 子页：block.media_format=single 时不叠加 thumb-grid-anthology-sub', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'Anthology Single' });
+  await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 2 });
+
+  await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: 'single' });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const subPageResponse = await fetch(`${baseUrl}/${collection.slug}/${blockId}`);
+  assert.equal(subPageResponse.status, 200);
+  const html = await subPageResponse.text();
+  assert.match(html, /thumb-grid-single/);
+  assert.equal(html.includes('thumb-grid-anthology-sub'), false, 'single 展示方式不应叠加 thumb-grid-anthology-sub');
+  assert.equal(html.includes('data-media-format="single"'), false, 'single 不应输出 data-media-format 属性');
+});
+
+test('anthology 子页：block.media_format=diptych 走双联画布局', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'Anthology Diptych' });
+  await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 4 });
+
+  await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: 'diptych' });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const subPageResponse = await fetch(`${baseUrl}/${collection.slug}/${blockId}`);
+  assert.equal(subPageResponse.status, 200);
+  const html = await subPageResponse.text();
+  assert.match(html, /thumb-grid-diptych/);
+  assert.equal(html.includes('thumb-grid-anthology-sub'), false, 'diptych 展示方式不应叠加 anthology-sub 类');
+  assert.equal(html.includes('data-media-format="diptych"'), false, 'diptych 不应输出 data-media-format 属性');
+});
+
+test('anthology 子页：block.media_format=wall 走照片墙布局', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'Anthology Wall' });
+  await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 3 });
+
+  await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: 'wall' });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const subPageResponse = await fetch(`${baseUrl}/${collection.slug}/${blockId}`);
+  assert.equal(subPageResponse.status, 200);
+  const html = await subPageResponse.text();
+  assert.match(html, /wall-grid/);
+  assert.equal(html.includes('thumb-grid-anthology-sub'), false, 'wall 展示方式不应叠加 anthology-sub 类');
+});
+
+test('anthology 子页：block.media_format=report 走图文混排布局', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'Anthology Report' });
+  await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 3 });
+
+  await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: 'report' });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const subPageResponse = await fetch(`${baseUrl}/${collection.slug}/${blockId}`);
+  assert.equal(subPageResponse.status, 200);
+  const html = await subPageResponse.text();
+  assert.match(html, /report-gallery/);
+  assert.equal(html.includes('thumb-grid-anthology-sub'), false, 'report 展示方式不应叠加 anthology-sub 类');
+});
+
+test('anthology 子页：block.media_format=3:2 叠加 thumb-grid-anthology-sub 与 data-media-format', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'Anthology 3:2' });
+  await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 2 });
+
+  await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: '3:2' });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const subPageResponse = await fetch(`${baseUrl}/${collection.slug}/${blockId}`);
+  assert.equal(subPageResponse.status, 200);
+  const html = await subPageResponse.text();
+  assert.match(html, /thumb-grid-anthology-sub/);
+  assert.match(html, /data-media-format="3:2"/);
+});
+
+test('更新 block media_format 为展示方式取值不被白名单重置为 3:2', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'WhiteList Check' });
+
+  for (const format of ['single', 'diptych', 'wall', 'report']) {
+    await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: format });
+    const row = db.prepare('SELECT media_format FROM collection_blocks WHERE id = ?').get(blockId);
+    assert.equal(row.media_format, format, `media_format should be ${format}, not reset to 3:2`);
+  }
+});
+
+test('更新 block media_format 为非法值时被重置为 3:2', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'Invalid Format' });
+
+  await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: 'bogus-format' });
+  const row = db.prepare('SELECT media_format FROM collection_blocks WHERE id = ?').get(blockId);
+  assert.equal(row.media_format, '3:2', '非法 media_format 应被白名单重置为 3:2');
+});
+
+test('发布作品集后 published_media_format 与 media_format 同步', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'Publish Sync' });
+  await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: 'wall' });
+
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+
+  const row = db.prepare('SELECT media_format, published_media_format FROM collection_blocks WHERE id = ?').get(blockId);
+  assert.equal(row.media_format, 'wall');
+  assert.equal(row.published_media_format, 'wall', '发布后 published_media_format 应同步为 wall');
+});
+
+test('anthology 子页底部包含返回上一级链接', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'Back Link' });
+  await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 1 });
+  await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: 'single' });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const subPageResponse = await fetch(`${baseUrl}/${collection.slug}/${blockId}`);
+  const html = await subPageResponse.text();
+  assert.match(html, new RegExp(`href="/${collection.slug}"`));
+});
+
+test('anthology 子页大图页：diptych 渲染双图 hero', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'Sub Large Diptych' });
+  const mediaIds = await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 2 });
+  await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: 'diptych' });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const firstMedia = db.prepare('SELECT filename FROM media WHERE id = ?').get(mediaIds[0]);
+  const baseName = firstMedia.filename.replace(/\.[^/.]+$/, '');
+  const largeResponse = await fetch(`${baseUrl}/${collection.slug}/${baseName}_large?block=${blockId}`);
+  assert.equal(largeResponse.status, 200);
+  const html = await largeResponse.text();
+  assert.match(html, /diptych-large/);
+});
+
+test('anthology 首页渲染封面网格与 block 标题', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({ sessionCookie, csrfToken, name: 'Anthology Home', });
+  await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 1 });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const homeResponse = await fetch(`${baseUrl}/${collection.slug}`);
+  assert.equal(homeResponse.status, 200);
+  const html = await homeResponse.text();
+  assert.match(html, /anthology-grid/);
+  assert.match(html, /Anthology Home 子集/);
+  assert.match(html, new RegExp(`/${collection.slug}/${blockId}`));
+});
+
+test('anthology 首页空标题 block 不渲染占位', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const collection = await createCollectionThroughAdmin({
+    sessionCookie,
+    csrfToken,
+    name: 'Empty Title Anthology',
+    slug: `empty-title-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    displayType: 'anthology'
+  });
+  const blockId = await createMediaBlock({ sessionCookie, csrfToken, collectionId: collection.id, title: '' });
+  await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 1 });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const homeResponse = await fetch(`${baseUrl}/${collection.slug}`);
+  const html = await homeResponse.text();
+  assert.equal(html.includes('class="anthology-entry-title"'), false, '空标题 block 不应渲染 title 元素');
+});
+
+test('archiving 首页渲染纯文字列表且不含图', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({
+    sessionCookie,
+    csrfToken,
+    name: 'Archiving Home',
+    displayType: 'archiving'
+  });
+  await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 2 });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const homeResponse = await fetch(`${baseUrl}/${collection.slug}`);
+  assert.equal(homeResponse.status, 200);
+  const html = await homeResponse.text();
+  assert.match(html, /archiving-list/);
+  assert.match(html, /Archiving Home 子集/);
+  assert.match(html, new RegExp(`/${collection.slug}/${blockId}`));
+  assert.equal(html.includes('anthology-grid'), false, 'archiving 首页不应渲染 anthology-grid');
+  assert.equal(/<img\b/.test(html), false, 'archiving 首页不应出现 img 标签');
+});
+
+test('archiving 子页与 anthology 子页渲染一致（按 media_format）', async () => {
+  const { sessionCookie, csrfToken } = await loginAsAdmin();
+  const { collection, blockId } = await createAnthologyCollectionWithBlock({
+    sessionCookie,
+    csrfToken,
+    name: 'Archiving Sub',
+    displayType: 'archiving'
+  });
+  await uploadAndAttachMediasToBlock({ sessionCookie, csrfToken, collectionId: collection.id, blockId, count: 2 });
+  await updateBlockMediaFormat({ sessionCookie, csrfToken, collectionId: collection.id, blockId, mediaFormat: 'diptych' });
+  await publishCollectionThroughAdmin({ sessionCookie, csrfToken, collectionId: collection.id });
+  db.prepare('UPDATE collections SET is_hidden = 0 WHERE id = ?').run(collection.id);
+
+  const subResponse = await fetch(`${baseUrl}/${collection.slug}/${blockId}`);
+  assert.equal(subResponse.status, 200);
+  const html = await subResponse.text();
+  assert.match(html, /thumb-grid-diptych/);
+  assert.equal(html.includes('thumb-grid-anthology-sub'), false);
+});
