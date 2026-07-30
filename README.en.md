@@ -64,6 +64,110 @@ For PRs, I'll do my best to understand the code you submit, but I can't promise 
 - **Graceful shutdown**: connection tracking, health/readiness checks, 404/500 fallbacks
 - **Automated tests**: 91 integration tests + 11 unit tests covering core workflows, security, and edge cases, including anthology / archiving sub-page routing and block-level `media_format` rendering
 
+## Collection Display Style Guide
+
+The system provides six collection display styles. They fall into two groups:
+
+- **Direct display**: Single, Diptych, Wall, and Report
+- **Hierarchical display**: Anthology and Archiving
+
+### Quick Selection
+
+| Style | What it does | Recommended for |
+| --- | --- | --- |
+| **Single** | Preserves media proportions in a spaced waterfall layout | General photography, painting, and illustration portfolios |
+| **Diptych** | Pairs every two media items according to their order | Contrast, correspondence, before/after relationships, and paired work |
+| **Wall** | Displays multiple columns continuously without gaps | Large series where density and overall atmosphere matter |
+| **Report** | Combines image galleries and text blocks | Project records, exhibition reports, and research-based work |
+| **Anthology** | Shows a cover grid first, then opens individual series | Collections containing several visual series |
+| **Archiving** | Shows a title list first, then opens individual content | Yearly archives, documents, manuscripts, and project materials |
+
+When in doubt:
+
+- No special structure: choose **Single**
+- Two works must be viewed together: choose **Diptych**
+- A large number of images should create one dense visual field: choose **Wall**
+- Images need accompanying explanation: choose **Report**
+- Several series need to be introduced by cover images: choose **Anthology**
+- Content should be found by title, year, or document name: choose **Archiving**
+
+### The Six Styles
+
+#### 1. Single
+
+Each work is displayed independently, preserving its original aspect ratio in a spaced multi-column waterfall layout. Large screens normally use three columns, medium screens two, and phones one.
+
+This is the general-purpose option for work without a defined pairing relationship. “Single” does not mean that a page can contain only one image.
+
+#### 2. Diptych
+
+Media are paired automatically according to their order in the admin panel: items 1 and 2 form a pair, then items 3 and 4, and so on. If the total is odd, the final item is displayed alone.
+
+The full-size viewer also treats each pair as one unit and stacks the two images vertically on mobile. Decide the pairs before arranging the media order; inserting or moving one item can change every following pair.
+
+#### 3. Wall
+
+Images are placed in continuous columns with no gaps. Large screens normally use four columns, medium screens three or two, and phones one. Videos autoplay silently in the wall.
+
+Wall emphasizes rhythm, density, and the overall visual field. It is less suitable for large amounts of whitespace, item-by-item reading, or strict pairing.
+
+#### 4. Report
+
+Image and text blocks can be combined into a sequence such as “Project introduction → Image group → Process → Image group → Conclusion”. Small galleries use a column count based on the number of images; larger galleries normally show square thumbnails before opening the full-size view.
+
+Text blocks support Markdown. Images and videos can also be uploaded directly and inserted into the text. Report is suited to exhibition records, research processes, residencies, performance work, and any project that needs context.
+
+#### 5. Anthology
+
+Anthology uses two levels. The first-level page shows multiple cover entries; clicking a cover opens its corresponding sub-series. Each media block represents one sub-series:
+
+- The first media item in the block becomes its cover
+- The “Anthology Title” appears below the cover
+- A block with no media does not become an entry
+- Text blocks are not cover entries; they appear after the cover grid on the anthology homepage
+
+Give each media block a title and place the intended cover image first.
+
+#### 6. Archiving
+
+Archiving also uses two levels, but the first-level page shows a title list rather than covers. Media blocks use “Anthology Title”; text blocks use “Document Title”. Both can become entries, but untitled blocks are omitted from the list.
+
+Use Archiving for content organized by year, project, medium, or document name. The key difference is: **Anthology is navigated by covers; Archiving is navigated by titles.**
+
+### Block Settings for Anthology and Archiving
+
+Only Anthology and Archiving allow each media block to have its own “Format/Display Mode”. This is a block-level setting, separate from the collection type.
+
+Display modes are: Single, Diptych, Wall, and Report.
+
+Available aspect ratios are: `3:2 (135)`, `2:3 (Half)`, `2.7:1 (X-Pan)`, `4:3 (6x4.5)`, `1:1 (6x6)`, `1.16:1 (6x7)`, `1.37:1 (6x8)`, `2.25:1 (6x12)`, `3:1 (6x17)`, and `5:4 (4x5)`.
+
+Choosing a display mode renders the sub-page with that layout. Choosing an aspect ratio renders the sub-page as a contact-print-style grid with uniform cell proportions. If an image orientation does not match the selected format, the system may rotate the image automatically.
+
+### Creating and Publishing from the Admin Panel
+
+1. Add a collection with a name, Slug, and collection type. New collections start with their entry hidden.
+2. Open “Media Management”. An image block and a text block are created automatically.
+3. Upload images or videos to the media block and drag to arrange their order. Newly uploaded media is placed at the beginning of the block.
+4. Edit the text block. Markdown is supported, and media can be uploaded and inserted into the text.
+5. For Anthology or Archiving, title each block and set the media block’s aspect ratio or display mode.
+6. Drag blocks, or use “Move Up/Move Down”, to adjust the page order.
+7. Click “Publish Updates” to send media, text, titles, formats, and ordering to the public site.
+8. Check the page at `/<slug>`. When it is ready, enable “Show Entry” on the collection card.
+
+Single, Diptych, and Wall normally use one media block. Report, Anthology, and Archiving can use multiple media blocks. All collection types can use multiple text blocks.
+
+### Publishing, Access, and Full-Size Viewing
+
+- **Hide entry**: The collection is removed from public navigation, but remains accessible to anyone who knows its URL.
+- **Block access**: The collection URL, full-size pages, and related APIs return 404, stopping external access.
+- **Publish Updates**: Media, text, block titles, formats, and ordering appear publicly only after publishing.
+- **Changing the collection type**: Type changes affect the public page immediately and do not use the collection’s draft publishing step.
+
+Changing an existing collection type does not delete its content, but its block structure may no longer fit the new style. Always check the public page after switching, especially when moving between Anthology, Archiving, Report, Single, Diptych, and Wall.
+
+All direct-display pages and Anthology/Archiving sub-pages support clicking a work to open the Lightbox. Use the previous/next buttons or arrow keys to navigate, `Esc` to close, and click the overlay to return. Artwork descriptions appear below the full-size media.
+
 ## Requirements
 
 - Node.js `>= 18.17`

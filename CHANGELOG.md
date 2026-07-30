@@ -6,6 +6,22 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.28.0] - 2026-07-30
+
+### Added
+
+- 5 份 README（zh-CN / zh-TW / zh-HK / en / ja）同步新增「作品集展示样式使用指南」章节：梳理 6 种展示样式（single / diptych / wall / report / anthology / archiving）的差异、推荐用途与选择方法，说明合集与归档的区块级「画幅/展示方式」设置，并整理后台创建与发布流程、发布与访问控制、Lightbox 大图查看等使用要点
+
+### Fixed
+
+- 修复测试运行结束后 Node 进程不退出的问题：`i18n` 库的 `autoReload: true` 在 `locales/` 目录上创建了 `fs.watch` 句柄，关闭服务器后仍保持进程存活。现测试模式下禁用 `autoReload`，配合 `server.closeAllConnections()` 与 undici 短 keep-alive dispatcher，测试套件可在约 7 秒内正常退出
+- 修复视频相关测试用例在未设置 `FFMPEG_PATH` 环境变量时误判 ffmpeg 不可用并全部 SKIP 的问题：`_ffmpegPath` 现按 `process.env.FFMPEG_PATH` → `require('ffmpeg-static')` → `'ffmpeg'` 的顺序解析，`processUploadedVideo 将非H.264视频转码为H.264 MP4` 用例补齐 `{ skip: !_ffmpegAvailable }` 守卫，与其他视频测试保持一致
+- 修复访问日志自动清理测试用例的阈值与 `MAX_VISIT_LOGS = 500` 不匹配的问题：原测试仅插入 210 条日志并断言 `<= 201`，但清理阈值实际为 500，导致断言恒为失败。现调整为插入 510 条日志并断言 `<= 501`
+
+### Changed
+
+- `test/server.test.js` 中 7 处 `process.env.FFMPEG_PATH || 'ffmpeg'` 统一替换为 `_ffmpegPath`，避免重复解析并保证与 `_ffmpegAvailable` 判定一致
+
 ## [2.27.0] - 2026-07-30
 
 ### Tests

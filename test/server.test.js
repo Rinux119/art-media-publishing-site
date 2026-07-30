@@ -26,7 +26,16 @@ const db = require('../db');
 const videoProcessor = require('../videoProcessor');
 
 const { spawnSync: _spawnSync } = require('child_process');
-const _ffmpegAvailable = _spawnSync(process.env.FFMPEG_PATH || 'ffmpeg', ['-version'], { stdio: 'ignore' }).status === 0;
+const _ffmpegPath = process.env.FFMPEG_PATH || (() => { try { return require('ffmpeg-static'); } catch { return 'ffmpeg'; } })();
+const _ffmpegAvailable = _spawnSync(_ffmpegPath, ['-version'], { stdio: 'ignore' }).status === 0;
+
+// Use a short-lived undici dispatcher so keep-alive sockets don't hold the process open after tests
+try {
+  const { Agent, setGlobalDispatcher } = require('undici');
+  setGlobalDispatcher(new Agent({ keepAliveTimeout: 100, keepAliveMaxTimeout: 1000 }));
+} catch {
+  // undici not directly accessible; fall back to default dispatcher
+}
 
 let server;
 let baseUrl;
@@ -359,6 +368,16 @@ test.after(async () => {
     await fs.remove(tempRoot);
   } catch {
     // ignore cleanup errors on temp directory removal
+  }
+  // Close undici global dispatcher to release keep-alive sockets that prevent process exit
+  try {
+    const { getGlobalDispatcher } = require('undici');
+    const dispatcher = getGlobalDispatcher();
+    if (dispatcher && typeof dispatcher.close === 'function') {
+      await dispatcher.close();
+    }
+  } catch {
+    // undici not available or already closed
   }
 });
 
@@ -1293,7 +1312,7 @@ test('MP4压缩：compressToMP4 将视频压缩为H.264 MP4格式', { skip: !_ff
   const videoFilename = 'mp4-test-video.mp4';
   const videoPath = path.join(mp4TestDir, videoFilename);
 
-  const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
+  const ffmpegPath = _ffmpegPath;
   const { spawnSync: spawnSyncFf } = require('child_process');
   const genResult = spawnSyncFf(ffmpegPath, [
     '-y', '-f', 'lavfi', '-i', 'color=c=black:s=320x240:d=3:r=10',
@@ -1332,7 +1351,7 @@ test('processUploadedVideo 将非H.264视频压缩为MP4并删除原文件', { s
   const videoFilename = 'upload-mp4-test.mov';
   const videoPath = path.join(uploadTestDir, videoFilename);
 
-  const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
+  const ffmpegPath = _ffmpegPath;
   const { spawnSync: spawnSyncFf } = require('child_process');
   spawnSyncFf(ffmpegPath, [
     '-y', '-f', 'lavfi', '-i', 'color=c=black:s=320x240:d=2:r=10',
@@ -1362,14 +1381,14 @@ test('processUploadedVideo 将非H.264视频压缩为MP4并删除原文件', { s
   await fs.remove(uploadTestDir);
 });
 
-test('processUploadedVideo 将非H.264视频转码为H.264 MP4', async () => {
+test('processUploadedVideo 将非H.264视频转码为H.264 MP4', { skip: !_ffmpegAvailable }, async () => {
   const uploadTestDir = path.join(tempRoot, 'mp4-transcode-test');
   await fs.ensureDir(uploadTestDir);
 
   const videoFilename = 'transcode-test.avi';
   const videoPath = path.join(uploadTestDir, videoFilename);
 
-  const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
+  const ffmpegPath = _ffmpegPath;
   const { spawnSync: spawnSyncFf } = require('child_process');
   const genResult = spawnSyncFf(ffmpegPath, [
     '-y', '-f', 'lavfi', '-i', 'color=c=black:s=128x96:d=1:r=5',
@@ -1407,7 +1426,7 @@ test('processUploadedVideo 已压缩的H.264 MP4压缩后更大时保留原文�
   const videoFilename = 'already-compressed.mp4';
   const videoPath = path.join(uploadTestDir, videoFilename);
 
-  const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
+  const ffmpegPath = _ffmpegPath;
   const { spawnSync: spawnSyncFf } = require('child_process');
   const genResult = spawnSyncFf(ffmpegPath, [
     '-y', '-f', 'lavfi', '-i', 'color=c=black:s=128x96:d=1:r=5',
@@ -1448,7 +1467,7 @@ test('MP4播放：首页视频使用src属性直接播放MP4', { skip: !_ffmpegA
   const videoFilename = `mp4-index-${Date.now()}.mp4`;
   const videoPath = path.join(rootVideoDir, videoFilename);
 
-  const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
+  const ffmpegPath = _ffmpegPath;
   const { spawnSync: spawnSyncFf } = require('child_process');
   spawnSyncFf(ffmpegPath, [
     '-y', '-f', 'lavfi', '-i', 'color=c=black:s=320x240:d=2:r=10',
@@ -1496,7 +1515,7 @@ test('MP4播放：作品集视频在API中标记isVideo并返回MP4 URL', { skip
   const videoFilename = `api-mp4-${Date.now()}.mp4`;
   const videoPath = path.join(colVideoDir, videoFilename);
 
-  const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
+  const ffmpegPath = _ffmpegPath;
   const { spawnSync: spawnSyncFf } = require('child_process');
   spawnSyncFf(ffmpegPath, [
     '-y', '-f', 'lavfi', '-i', 'color=c=black:s=320x240:d=2:r=10',
@@ -1545,7 +1564,7 @@ test('MP4播放：大图页视频使用src属性直接播放MP4', { skip: !_ffmp
   const videoFilename = `detail-mp4-${Date.now()}.mp4`;
   const videoPath = path.join(colVideoDir, videoFilename);
 
-  const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
+  const ffmpegPath = _ffmpegPath;
   const { spawnSync: spawnSyncFf } = require('child_process');
   spawnSyncFf(ffmpegPath, [
     '-y', '-f', 'lavfi', '-i', 'color=c=black:s=320x240:d=2:r=10',
@@ -1907,14 +1926,14 @@ test('访问日志：后台路径不被记录', async () => {
 test('访问日志：日志超过上限时自动清理', async () => {
   db.prepare('DELETE FROM visit_logs').run();
 
-  for (let i = 0; i < 210; i++) {
+  for (let i = 0; i < 510; i++) {
     db.prepare('INSERT INTO visit_logs (ip, path, user_agent, visited_at) VALUES (?, ?, ?, ?)').run('127.0.0.1', `/test-path-${i}`, 'test', Date.now());
   }
 
   await fetch(`${baseUrl}/`);
 
   const count = db.prepare('SELECT COUNT(*) AS cnt FROM visit_logs').get();
-  assert.ok(count.cnt <= 201, `visit logs should be pruned to ~200, got ${count.cnt}`);
+  assert.ok(count.cnt <= 501, `visit logs should be pruned to ~500, got ${count.cnt}`);
 });
 
 test('旧 URL /content/:slug/index.html 重定向到 /:slug', async () => {
