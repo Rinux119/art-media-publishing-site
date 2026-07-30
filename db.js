@@ -193,6 +193,14 @@ if (blockColumns.length > 0) {
         db.exec("ALTER TABLE collection_blocks ADD COLUMN published_title TEXT NOT NULL DEFAULT ''");
     }
     db.exec("UPDATE collection_blocks SET published_title = '' WHERE published_title IS NULL");
+    if (!blockColumns.some((col) => col.name === 'media_format')) {
+        db.exec("ALTER TABLE collection_blocks ADD COLUMN media_format TEXT NOT NULL DEFAULT '3:2'");
+    }
+    db.exec("UPDATE collection_blocks SET media_format = '3:2' WHERE media_format IS NULL OR media_format = ''");
+    if (!blockColumns.some((col) => col.name === 'published_media_format')) {
+        db.exec("ALTER TABLE collection_blocks ADD COLUMN published_media_format TEXT NOT NULL DEFAULT '3:2'");
+    }
+    db.exec("UPDATE collection_blocks SET published_media_format = '3:2' WHERE published_media_format IS NULL OR published_media_format = ''");
     const existingBlockCount = db.prepare('SELECT COUNT(*) AS count FROM collection_blocks').get();
     if (!existingBlockCount || existingBlockCount.count === 0) {
         const collectionsForBlocks = db.prepare('SELECT id, report_markdown, published_report_markdown FROM collections').all();

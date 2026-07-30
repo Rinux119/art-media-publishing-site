@@ -58,6 +58,12 @@
             return;
         }
 
+        var saveFormatBtn = e.target.closest('.btn-save-block-format');
+        if (saveFormatBtn) {
+            saveBlockMediaFormat(saveFormatBtn.dataset.blockId);
+            return;
+        }
+
         var toggleBtn = e.target.closest('.btn-toggle-collapse');
         if (toggleBtn) {
             var card = toggleBtn.closest('.block-card');
@@ -218,9 +224,68 @@
         });
     }
 
+    function saveBlockMediaFormat(blockId) {
+        var card = blockList.querySelector('.block-card[data-block-id="' + blockId + '"]');
+        if (!card) return;
+        var select = card.querySelector('.block-format-select');
+        if (!select) return;
+        var format = select.value;
+        var statusEl = card.querySelector('.block-format-status');
+
+        fetch('/admin/collections/' + collectionId + '/blocks/' + blockId + '/update?json=1', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-CSRF-Token': _csrfToken
+            },
+            body: 'media_format=' + encodeURIComponent(format)
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data && data.success) {
+                if (statusEl) statusEl.textContent = t.draftSaved;
+                showPageNotice(t.draftSaved);
+                document.dispatchEvent(new CustomEvent('draft-changed'));
+            } else {
+                if (statusEl) statusEl.textContent = t.saveFailed;
+                showPageNotice(t.saveFailed, true);
+            }
+        })
+        .catch(function() {
+            if (statusEl) statusEl.textContent = t.draftSaveFailed;
+            showPageNotice(t.draftSaveFailed, true);
+        });
+    }
+
     function createBlockCardHtml(block) {
         var id = block.id;
         if (block.block_type === 'media') {
+            var formatFieldHtml = '';
+            if (collectionDisplayType === 'anthology' || collectionDisplayType === 'archiving') {
+                var formatOptions = [
+                    { value: '3:2', label: '3:2 (135)' },
+                    { value: '2:3', label: '2:3 (Half)' },
+                    { value: '2.7:1', label: '2.7:1 (X-Pan)' },
+                    { value: '4:3', label: '4:3 (6x4.5)' },
+                    { value: '1:1', label: '1:1 (6x6)' },
+                    { value: '1.16:1', label: '1.16:1 (6x7)' },
+                    { value: '1.37:1', label: '1.37:1 (6x8)' },
+                    { value: '2.25:1', label: '2.25:1 (6x12)' },
+                    { value: '3:1', label: '3:1 (6x17)' },
+                    { value: '5:4', label: '5:4 (4x5)' }
+                ];
+                var formatOptionsHtml = formatOptions.map(function(opt) {
+                    return '<option value="' + opt.value + '"' + (opt.value === '3:2' ? ' selected' : '') + '>' + opt.label + '</option>';
+                }).join('');
+                formatFieldHtml = '<div class="media-config-field media-config-field-format">' +
+                    '<label class="media-config-label" for="block-media-format-' + id + '">' + (t.mediaFormat || 'Format') + '</label>' +
+                    '<div class="block-format-row">' +
+                        '<select id="block-media-format-' + id + '" class="block-format-select" name="block_media_format" data-block-id="' + id + '">' + formatOptionsHtml + '</select>' +
+                        '<span class="autosave-status block-format-status" data-block-id="' + id + '" aria-live="polite"></span>' +
+                    '</div>' +
+                '</div>';
+            }
             var titleRowHtml = '<div class="block-title-row" data-block-id="' + id + '">' +
                 '<input type="text" id="block-title-' + id + '" class="block-title-input" name="block_title" value="" placeholder="' + (t.anthologyTitlePlaceholder || '') + '" maxlength="120" data-block-id="' + id + '">' +
                 '<button type="button" class="btn-secondary btn-save-block-title" data-block-id="' + id + '">' + (t.saveTitle || 'Save') + '</button>' +
@@ -245,26 +310,42 @@
                     '</div>' +
                 '</div>' +
                 '<div class="block-card-body">' +
-                    '<div class="panel-soft">' +
-                        '<form class="block-upload-form toolbar-row" action="/admin/collections/' + collectionId + '/media/upload" method="POST" enctype="multipart/form-data" data-block-id="' + id + '">' +
-                            '<input type="hidden" name="_csrf" value="' + _csrfToken + '">' +
-                            '<input type="hidden" name="block_id" value="' + id + '">' +
-                            '<input type="file" name="media" accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.wmv,.flv" multiple required>' +
-                            '<button type="submit" class="btn-primary">' + t.startUpload + '</button>' +
+                    '<div class="media-config-panel">' +
+                        '<div class="media-config-metadata' + (formatFieldHtml ? ' is-format-enabled' : '') + '">' +
+                            '<div class="media-config-field media-config-field-title">' +
+                                '<label class="media-config-label" for="block-title-' + id + '">' + (t.anthologyTitle || 'Title') + '</label>' +
+                                titleRowHtml +
+                            '</div>' +
+                            formatFieldHtml +
+                        '</div>' +
+                        '<form class="block-upload-form media-upload-row" action="/admin/collections/' + collectionId + '/media/upload" method="POST" enctype="multipart/form-data" data-block-id="' + id + '">' +
+                            '<div class="media-config-label">' + (t.uploadMedia || 'Upload Media') + '</div>' +
+                            '<div class="media-upload-controls">' +
+                                '<input type="hidden" name="_csrf" value="' + _csrfToken + '">' +
+                                '<input type="hidden" name="block_id" value="' + id + '">' +
+                                '<label class="file-select-label">' +
+                                    '<span>' + (t.selectFile || 'Select File') + '</span>' +
+                                    '<input type="file" name="media" accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v,.wmv,.flv" multiple required>' +
+                                '</label>' +
+                                '<span class="file-name-display" data-block-id="' + id + '"></span>' +
+                                '<button type="submit" class="btn-primary">' + t.startUpload + '</button>' +
+                            '</div>' +
                         '</form>' +
-                        titleRowHtml +
+                        '<div class="block-upload-progress" style="display:none;">' +
+                            '<div class="block-upload-progress-text">' + t.preparingUpload + '</div>' +
+                            '<div class="block-upload-progress-track">' +
+                                '<div class="block-upload-progress-bar" style="width:0%;"></div>' +
+                            '</div>' +
+                        '</div>' +
                     '</div>' +
-                    '<div class="block-upload-progress" style="display:none; margin-top: 0.75rem;">' +
-                        '<div class="block-upload-progress-text" style="font-size:12px;color:#666;margin-bottom:4px;">' + t.preparingUpload + '</div>' +
-                        '<div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;">' +
-                            '<div class="block-upload-progress-bar" style="width:0%;height:100%;background:#333;"></div>' +
+                    '<div class="media-order-bar">' +
+                        '<span class="media-order-hint">' + (t.orderMediaHint || t.dragToReorder) + '</span>' +
+                        '<div class="media-order-actions">' +
+                            '<span class="autosave-status block-order-status" data-block-id="' + id + '" aria-live="polite"></span>' +
+                            '<button type="button" class="btn-primary btn-save-block-order" data-block-id="' + id + '">' + t.saveOrder + '</button>' +
                         '</div>' +
                     '</div>' +
                     '<div class="media-grid block-media-grid" data-block-id="' + id + '"></div>' +
-                    '<div class="actions-right" style="margin-top: 16px;">' +
-                        '<span class="autosave-status block-order-status" data-block-id="' + id + '" aria-live="polite"></span>' +
-                        '<button type="button" class="btn-primary btn-save-block-order" data-block-id="' + id + '">' + t.saveOrder + '</button>' +
-                    '</div>' +
                 '</div>' +
             '</div>';
         }
@@ -381,6 +462,13 @@
         dragStartFromHandle = !!e.target.closest('.block-handle');
     });
 
+    blockList.addEventListener('change', function(e) {
+        var select = e.target.closest('.block-format-select');
+        if (select) {
+            saveBlockMediaFormat(select.dataset.blockId);
+        }
+    });
+
     blockList.addEventListener('dragstart', function(e) {
         if (e.target.closest('.media-item')) return;
         if (!dragStartFromHandle) {
@@ -450,6 +538,22 @@
         })
         .catch(function() {});
     }
+
+    blockList.addEventListener('change', function(e) {
+        var fileInput = e.target.closest('input[type="file"]');
+        if (!fileInput) return;
+        var form = fileInput.closest('.block-upload-form');
+        if (!form) return;
+        var display = form.querySelector('.file-name-display');
+        if (!display) return;
+        if (fileInput.files && fileInput.files.length > 0) {
+            display.textContent = fileInput.files.length === 1
+                ? fileInput.files[0].name
+                : (t.filesSelected || '{{count}} files selected').replace('{{count}}', fileInput.files.length);
+        } else {
+            display.textContent = '';
+        }
+    });
 
     blockList.addEventListener('submit', function(e) {
         var form = e.target.closest('.block-upload-form');

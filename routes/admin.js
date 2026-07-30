@@ -1047,6 +1047,7 @@ const registerAdminRoutes = ({
         } else if (block.block_type === 'media') {
             const hasMediaIds = Object.prototype.hasOwnProperty.call(req.body, 'media_ids');
             const hasTitle = Object.prototype.hasOwnProperty.call(req.body, 'title');
+            const hasMediaFormat = Object.prototype.hasOwnProperty.call(req.body, 'media_format');
             const updates = [];
             const params = [];
             if (hasMediaIds) {
@@ -1063,6 +1064,13 @@ const registerAdminRoutes = ({
                 const title = typeof req.body.title === 'string' ? req.body.title : '';
                 updates.push('title = ?');
                 params.push(title);
+            }
+            if (hasMediaFormat) {
+                const allowedFormats = ['3:2', '2:3', '2.7:1', '4:3', '1:1', '1.16:1', '1.37:1', '2.25:1', '3:1', '5:4'];
+                let format = typeof req.body.media_format === 'string' ? req.body.media_format : '3:2';
+                if (!allowedFormats.includes(format)) format = '3:2';
+                updates.push('media_format = ?');
+                params.push(format);
             }
             if (updates.length > 0) {
                 params.push(req.params.blockId);
@@ -1140,6 +1148,7 @@ const registerAdminRoutes = ({
                     published_media_ids = media_ids,
                     published_order_index = order_index,
                     published_title = title,
+                    published_media_format = media_format,
                     is_published = 1
                 WHERE collection_id = ?
             `).run(collectionId);

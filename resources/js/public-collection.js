@@ -6,7 +6,37 @@
     const collectionSlug = (grid && grid.dataset.collectionSlug) || '';
     const items = rawJson ? JSON.parse(rawJson.textContent || '[]') : [];
     const batchSize = parseInt((loading && loading.dataset.batchSize) || '20', 10) || 20;
+    const mediaFormat = (grid && grid.dataset.mediaFormat) || '3:2';
     let cursor = 0;
+    var formatMap = {
+      '3:2': { w: 3, h: 2, landscape: true },
+      '2:3': { w: 2, h: 3, landscape: false },
+      '2.7:1': { w: 2.7, h: 1, landscape: true },
+      '4:3': { w: 4, h: 3, landscape: true },
+      '1:1': { w: 1, h: 1, landscape: true },
+      '1.16:1': { w: 1.16, h: 1, landscape: true },
+      '1.37:1': { w: 1.37, h: 1, landscape: true },
+      '2.25:1': { w: 2.25, h: 1, landscape: true },
+      '3:1': { w: 3, h: 1, landscape: true },
+      '5:4': { w: 5, h: 4, landscape: true }
+    };
+
+    function markPortraitImage(img) {
+      function check() {
+        if (!img.naturalWidth || !img.naturalHeight) return;
+        var fmt = formatMap[mediaFormat] || formatMap['3:2'];
+        var imgIsLandscape = img.naturalWidth / img.naturalHeight >= 1;
+        var wrap = img.closest('.media-item, .anthology-entry-thumb');
+        if (!wrap) return;
+        if (fmt.landscape && !imgIsLandscape) {
+          wrap.classList.add('is-rotated');
+        } else if (!fmt.landscape && imgIsLandscape) {
+          wrap.classList.add('is-rotated');
+        }
+      }
+      if (img.complete && img.naturalWidth) check();
+      else img.addEventListener('load', check);
+    }
 
     function getLargeUrl(filename) {
       return '/' + collectionSlug + '/' + filename.replace(/\.[^/.]+$/, '') + '_large';
@@ -67,6 +97,7 @@
       img.src = item.mediaUrl;
       img.alt = item.original_name || '';
       img.loading = 'lazy';
+      markPortraitImage(img);
       return img;
     }
 
@@ -195,6 +226,9 @@
         });
       });
     }
+
+    document.querySelectorAll('.anthology-entry-thumb img').forEach(markPortraitImage);
+    if (!grid) return;
 
     appendBatch();
     if (cursor < items.length) {

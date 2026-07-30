@@ -129,21 +129,37 @@
   .thumb-grid-anthology-sub {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    column-count: auto;
+    gap: 3px;
   }
   .thumb-grid-anthology-sub .media-link {
     display: block;
     width: 100%;
-    break-inside: auto;
-    margin-bottom: 0;
   }
   .thumb-grid-anthology-sub .media-item {
     width: 100%;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 3 / 2;
     overflow: hidden;
     background: #fff;
+    position: relative;
   }
+  #wall-grid[data-media-format="2:3"] .thumb-grid-anthology-sub .media-item,
+  #wall-grid[data-media-format="2:3"] .media-item { aspect-ratio: 2 / 3; }
+  #wall-grid[data-media-format="2.7:1"] .thumb-grid-anthology-sub .media-item,
+  #wall-grid[data-media-format="2.7:1"] .media-item { aspect-ratio: 2.7 / 1; }
+  #wall-grid[data-media-format="4:3"] .thumb-grid-anthology-sub .media-item,
+  #wall-grid[data-media-format="4:3"] .media-item { aspect-ratio: 4 / 3; }
+  #wall-grid[data-media-format="1:1"] .thumb-grid-anthology-sub .media-item,
+  #wall-grid[data-media-format="1:1"] .media-item { aspect-ratio: 1 / 1; }
+  #wall-grid[data-media-format="1.16:1"] .thumb-grid-anthology-sub .media-item,
+  #wall-grid[data-media-format="1.16:1"] .media-item { aspect-ratio: 1.16 / 1; }
+  #wall-grid[data-media-format="1.37:1"] .thumb-grid-anthology-sub .media-item,
+  #wall-grid[data-media-format="1.37:1"] .media-item { aspect-ratio: 1.37 / 1; }
+  #wall-grid[data-media-format="2.25:1"] .thumb-grid-anthology-sub .media-item,
+  #wall-grid[data-media-format="2.25:1"] .media-item { aspect-ratio: 2.25 / 1; }
+  #wall-grid[data-media-format="3:1"] .thumb-grid-anthology-sub .media-item,
+  #wall-grid[data-media-format="3:1"] .media-item { aspect-ratio: 3 / 1; }
+  #wall-grid[data-media-format="5:4"] .thumb-grid-anthology-sub .media-item,
+  #wall-grid[data-media-format="5:4"] .media-item { aspect-ratio: 5 / 4; }
   .thumb-grid-anthology-sub .media-item img,
   .thumb-grid-anthology-sub .media-item video,
   .thumb-grid-anthology-sub .media-item canvas {
@@ -151,6 +167,15 @@
     height: 100%;
     object-fit: contain;
     background: #fff;
+  }
+  .thumb-grid-anthology-sub .media-item.is-rotated img,
+  #wall-grid[data-media-format] .media-item.is-rotated img {
+    width: auto;
+    height: 100%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg) scale(1.5);
   }
   .thumb-grid-anthology-sub .thumb-video-wrap {
     width: 100%;
@@ -342,7 +367,7 @@
   .anthology-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 3px;
     width: 100%;
   }
   .anthology-entry {
@@ -353,9 +378,10 @@
   }
   .anthology-entry-thumb {
     width: 100%;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 3 / 2;
     overflow: hidden;
     cursor: pointer;
+    position: relative;
   }
   .anthology-entry-thumb img,
   .anthology-entry-thumb video {
@@ -365,6 +391,14 @@
     object-fit: contain;
     background: #fff;
     transition: filter 160ms ease;
+  }
+  .anthology-entry-thumb.is-rotated img {
+    width: auto;
+    height: 100%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg) scale(1.5);
   }
   .anthology-entry:focus .anthology-entry-thumb img,
   .anthology-entry:focus .anthology-entry-thumb video,
@@ -391,7 +425,7 @@
   }
   .anthology-entry-title {
     display: block;
-    margin-top: 6px;
+    margin-top: 2px;
     color: #333;
     font-size: 13px;
     line-height: 1.4;

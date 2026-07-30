@@ -326,7 +326,7 @@ const registerPublicRoutes = ({
 
         const blockIdNum = Number(blockId);
         const rawBlock = db.prepare(
-            'SELECT id, block_type, published_markdown AS markdown, published_media_ids AS media_ids, published_order_index AS order_index, published_title AS title FROM collection_blocks WHERE id = ? AND collection_id = ? AND is_published = 1 AND is_deleted_draft = 0'
+            'SELECT id, block_type, published_markdown AS markdown, published_media_ids AS media_ids, published_order_index AS order_index, published_title AS title, published_media_format AS media_format FROM collection_blocks WHERE id = ? AND collection_id = ? AND is_published = 1 AND is_deleted_draft = 0'
         ).get(blockIdNum, collection.id);
         if (!rawBlock) return renderNotFound(req, res);
 
@@ -349,7 +349,7 @@ const registerPublicRoutes = ({
 
             if (blockMedia.length === 0) return renderNotFound(req, res);
 
-            block = { id: rawBlock.id, blockType: 'media', orderIndex: rawBlock.order_index, title: rawBlock.title || '', media: blockMedia };
+            block = { id: rawBlock.id, blockType: 'media', orderIndex: rawBlock.order_index, title: rawBlock.title || '', media: blockMedia, mediaFormat: rawBlock.media_format || '3:2' };
         } else if (rawBlock.block_type === 'text') {
             const html = renderMarkdown(rawBlock.markdown || '');
             block = { id: rawBlock.id, blockType: 'text', orderIndex: rawBlock.order_index, title: rawBlock.title || '', markdown: rawBlock.markdown || '', html };

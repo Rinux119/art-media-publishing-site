@@ -6,6 +6,18 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.23.0] - 2026-07-30
+
+### Added
+
+- anthology 和 archiving 媒体区块新增画幅选择功能：可在媒体管理区块中选择多种胶卷画幅比例（3:2/135、2:3/Half、2.7:1/X-Pan、4:3/6x4.5、1:1/6x6、1.16:1/6x7、1.37:1/6x8、2.25:1/6x12、3:1/6x17、5:4/4x5），前台根据画幅比例控制图片旋转和画格比例（竖图旋转 90° 填满画格，主体侧躺）；数据库新增 `media_format` 和 `published_media_format` 字段
+- 新增多语言词条：`selectFile`（选择文件）、`anthologyTitle`（合集标题）、`mediaFormat`（画幅）、`orderMediaHint`（拖动媒体调整展示顺序），4 语言同步
+
+### Changed
+
+- anthology 一级和二级 Grid 布局改为胶卷「接触印相」（Contact Printing）风格：画格固定比例、统一排列，模拟胶卷底片印相的视觉效果
+- 管理后台媒体区块配置区重新设计为语义化分区结构：采用 `media-config-panel`（合集标题 + 画幅选择 + 上传区）与 `media-order-bar`（保存顺序）分区布局，替代原有单行 flex 布局；各字段添加 label 标签（合集标题、画幅、上传媒体），file input 改为自定义 label 按钮统一对齐样式，选中文件后显示文件名
+
 ## [2.22.2] - 2026-07-28
 
 ### Changed
