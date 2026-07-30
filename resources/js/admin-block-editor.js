@@ -261,9 +261,16 @@
     function createBlockCardHtml(block) {
         var id = block.id;
         if (block.block_type === 'media') {
+            var isFormatEnabled = (collectionDisplayType === 'anthology' || collectionDisplayType === 'archiving');
             var formatFieldHtml = '';
-            if (collectionDisplayType === 'anthology' || collectionDisplayType === 'archiving') {
-                var formatOptions = [
+            if (isFormatEnabled) {
+                var displayModeOptions = [
+                    { value: 'single', label: (t.formatSingle || 'Single') },
+                    { value: 'diptych', label: (t.formatDiptych || 'Diptych') },
+                    { value: 'wall', label: (t.formatWall || 'Wall') },
+                    { value: 'report', label: (t.formatReport || 'Report') }
+                ];
+                var aspectRatioOptions = [
                     { value: '3:2', label: '3:2 (135)' },
                     { value: '2:3', label: '2:3 (Half)' },
                     { value: '2.7:1', label: '2.7:1 (X-Pan)' },
@@ -275,13 +282,36 @@
                     { value: '3:1', label: '3:1 (6x17)' },
                     { value: '5:4', label: '5:4 (4x5)' }
                 ];
-                var formatOptionsHtml = formatOptions.map(function(opt) {
+                var displayModeHtml = displayModeOptions.map(function(opt) {
+                    return '<option value="' + opt.value + '">' + opt.label + '</option>';
+                }).join('');
+                var aspectRatioHtml = aspectRatioOptions.map(function(opt) {
                     return '<option value="' + opt.value + '"' + (opt.value === '3:2' ? ' selected' : '') + '>' + opt.label + '</option>';
                 }).join('');
                 formatFieldHtml = '<div class="media-config-field media-config-field-format">' +
                     '<label class="media-config-label" for="block-media-format-' + id + '">' + (t.mediaFormat || 'Format') + '</label>' +
                     '<div class="block-format-row">' +
-                        '<select id="block-media-format-' + id + '" class="block-format-select" name="block_media_format" data-block-id="' + id + '">' + formatOptionsHtml + '</select>' +
+                        '<select id="block-media-format-' + id + '" class="block-format-select" name="block_media_format" data-block-id="' + id + '">' +
+                            '<optgroup label="' + (t.displayMode || 'Display Mode') + '">' + displayModeHtml + '</optgroup>' +
+                            '<optgroup label="' + (t.aspectRatio || 'Aspect Ratio') + '">' + aspectRatioHtml + '</optgroup>' +
+                        '</select>' +
+                        '<span class="autosave-status block-format-status" data-block-id="' + id + '" aria-live="polite"></span>' +
+                    '</div>' +
+                '</div>';
+            } else {
+                var fixedDisplayModeMap = {
+                    'single': (t.formatSingle || 'Single'),
+                    'diptych': (t.formatDiptych || 'Diptych'),
+                    'wall': (t.formatWall || 'Wall'),
+                    'report': (t.formatReport || 'Report')
+                };
+                var fixedLabel = fixedDisplayModeMap[collectionDisplayType] || collectionDisplayType;
+                formatFieldHtml = '<div class="media-config-field media-config-field-format">' +
+                    '<label class="media-config-label" for="block-media-format-' + id + '">' + (t.mediaFormat || 'Format') + '</label>' +
+                    '<div class="block-format-row">' +
+                        '<select id="block-media-format-' + id + '" class="block-format-select is-disabled" name="block_media_format" data-block-id="' + id + '" disabled>' +
+                            '<option value="' + collectionDisplayType + '" selected>' + fixedLabel + '</option>' +
+                        '</select>' +
                         '<span class="autosave-status block-format-status" data-block-id="' + id + '" aria-live="polite"></span>' +
                     '</div>' +
                 '</div>';
@@ -311,15 +341,15 @@
                 '</div>' +
                 '<div class="block-card-body">' +
                     '<div class="media-config-panel">' +
-                        '<div class="media-config-metadata' + (formatFieldHtml ? ' is-format-enabled' : '') + '">' +
+                        '<div class="media-config-row' + (formatFieldHtml ? ' is-format-enabled' : '') + '">' +
                             '<div class="media-config-field media-config-field-title">' +
                                 '<label class="media-config-label" for="block-title-' + id + '">' + (t.anthologyTitle || 'Title') + '</label>' +
                                 titleRowHtml +
                             '</div>' +
                             formatFieldHtml +
                         '</div>' +
+                        '<div class="media-config-label">' + (t.uploadMedia || 'Upload Media') + '</div>' +
                         '<form class="block-upload-form media-upload-row" action="/admin/collections/' + collectionId + '/media/upload" method="POST" enctype="multipart/form-data" data-block-id="' + id + '">' +
-                            '<div class="media-config-label">' + (t.uploadMedia || 'Upload Media') + '</div>' +
                             '<div class="media-upload-controls">' +
                                 '<input type="hidden" name="_csrf" value="' + _csrfToken + '">' +
                                 '<input type="hidden" name="block_id" value="' + id + '">' +
@@ -338,6 +368,7 @@
                             '</div>' +
                         '</div>' +
                     '</div>' +
+                    '<div class="media-grid block-media-grid" data-block-id="' + id + '"></div>' +
                     '<div class="media-order-bar">' +
                         '<span class="media-order-hint">' + (t.orderMediaHint || t.dragToReorder) + '</span>' +
                         '<div class="media-order-actions">' +
@@ -345,7 +376,6 @@
                             '<button type="button" class="btn-primary btn-save-block-order" data-block-id="' + id + '">' + t.saveOrder + '</button>' +
                         '</div>' +
                     '</div>' +
-                    '<div class="media-grid block-media-grid" data-block-id="' + id + '"></div>' +
                 '</div>' +
             '</div>';
         }

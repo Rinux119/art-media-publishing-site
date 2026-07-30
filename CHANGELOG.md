@@ -6,6 +6,18 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.24.0] - 2026-07-30
+
+### Added
+
+- 媒体管理区块画幅选择器升级为「画幅/展示方式」：anthology 和 archiving 类型新增「展示方式」选项组（单幅瀑布流 single、双联画 diptych、照片墙 wall、报告 report），与原「画幅」选项组并列；选中某展示方式时该区块按对应样式渲染，为合集与归档提供按区块切换展示方式的能力
+- 多语言词条新增：`displayMode`（展示方式）、`aspectRatio`（画幅）、`formatSingle`（单幅瀑布流）、`formatDiptych`（双联画）、`formatWall`（照片墙）、`formatReport`（报告），4 语言同步
+
+### Changed
+
+- 所有展示类型的媒体区块统一显示「画幅/展示方式」配置区：single/diptych/wall/report 类型固定为对应的展示方式且不可选（disabled），与 anthology/archiving 视觉布局保持一致；移除「该样式下不可选」占位文案
+- 画幅选择器 optgroup 分组：使用 `<optgroup>` 将「展示方式」与「画幅」分为两组，提升可读性
+
 ## [2.23.0] - 2026-07-30
 
 ### Added
