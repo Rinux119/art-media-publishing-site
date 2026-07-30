@@ -246,6 +246,7 @@
             justify-content: flex-end;
             gap: 8px;
             min-width: 0;
+            margin-left: auto;
         }
         .media-order-actions .autosave-status,
         .media-config-panel .autosave-status {
@@ -669,9 +670,8 @@
     transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 .btn-delete-block:hover { color: #8b3a3a; border-color: #c99595; background: #fff8f8; }
-.block-text-editor { display: flex; flex-direction: column; gap: 12px; }
+.block-text-editor { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px dotted #e2e2de; }
 .block-text-editor textarea { min-height: 480px; font-family: "Courier New", monospace; }
-.block-text-actions { display: flex; align-items: center; gap: 8px; }
 .btn-draft-delete {
     background: #fff;
     border: 1px solid #b5b5b5;

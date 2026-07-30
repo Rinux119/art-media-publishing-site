@@ -544,9 +544,10 @@
             }
             if (target && target.startsWith('block-')) {
                 const blockId = target.slice(6);
-                const editor = document.querySelector('.block-text-editor');
                 const btn2 = document.querySelector('.btn-save-text-block[data-block-id="' + blockId + '"]');
-                return btn2 ? btn2.closest('.block-text-editor').querySelector('textarea[name="markdown"]') : null;
+                if (!btn2) return null;
+                const card = btn2.closest('.block-card');
+                return card ? card.querySelector('.block-text-editor textarea[name="markdown"]') : null;
             }
             // media-item 的 target 是 mediaId
             const form = document.querySelector('.report-media-form[action*="/admin/media/update-report/' + target + '"]');
@@ -576,9 +577,10 @@
             formData.append('file', file);
             const textarea = findTextareaForButton(btn);
             const statusEl = btn.parentElement.querySelector('.autosave-status');
-            const originalText = btn.textContent;
+            const btnTextEl = btn.querySelector('span') || btn;
+            const originalText = btnTextEl.textContent;
             btn.disabled = true;
-            btn.textContent = t.collectionDetail.uploadingToDescription || 'Uploading...';
+            btnTextEl.textContent = t.collectionDetail.uploadingToDescription || 'Uploading...';
             if (statusEl) {
                 statusEl.textContent = t.collectionDetail.uploadingToDescription || 'Uploading...';
                 statusEl.classList.add('is-saving');
@@ -621,7 +623,7 @@
                 }
             }).finally(() => {
                 btn.disabled = false;
-                btn.textContent = originalText;
+                btnTextEl.textContent = originalText;
             });
         };
 

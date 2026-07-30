@@ -398,16 +398,42 @@
                 '</div>' +
             '</div>' +
             '<div class="block-card-body">' +
-                '<div class="block-text-editor">' +
-                    '<div class="block-title-row" data-block-id="' + id + '">' +
-                        '<input type="text" id="block-title-' + id + '" class="block-title-input" name="block_title" value="" placeholder="' + (t.documentTitlePlaceholder || '') + '" maxlength="120" data-block-id="' + id + '">' +
-                        '<button type="button" class="btn-secondary btn-save-block-title" data-block-id="' + id + '">' + (t.saveTitle || 'Save') + '</button>' +
-                        '<span class="autosave-status block-title-status" data-block-id="' + id + '" aria-live="polite"></span>' +
+                '<div class="media-config-panel">' +
+                    '<div class="media-config-row is-format-enabled">' +
+                        '<div class="media-config-field media-config-field-title">' +
+                            '<label class="media-config-label" for="block-title-' + id + '">' + (t.documentTitle || 'Title') + '</label>' +
+                            '<div class="block-title-row" data-block-id="' + id + '">' +
+                                '<input type="text" id="block-title-' + id + '" class="block-title-input" name="block_title" value="" placeholder="' + (t.documentTitlePlaceholder || '') + '" maxlength="120" data-block-id="' + id + '">' +
+                                '<button type="button" class="btn-secondary btn-save-block-title" data-block-id="' + id + '">' + (t.saveTitle || 'Save') + '</button>' +
+                                '<span class="autosave-status block-title-status" data-block-id="' + id + '" aria-live="polite"></span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="media-config-field media-config-field-format">' +
+                            '<label class="media-config-label" for="block-media-format-' + id + '">' + (t.mediaFormat || 'Format') + '</label>' +
+                            '<div class="block-format-row">' +
+                                '<select id="block-media-format-' + id + '" class="block-format-select is-disabled" name="block_media_format" data-block-id="' + id + '" disabled>' +
+                                    '<option value="" selected>' + (t.textModeUnavailable || 'Unavailable for text mode') + '</option>' +
+                                '</select>' +
+                                '<span class="autosave-status block-format-status" data-block-id="' + id + '" aria-live="polite"></span>' +
+                            '</div>' +
+                        '</div>' +
                     '</div>' +
+                    '<div class="media-config-label">' + (t.uploadToDescription || 'Upload Media') + '</div>' +
+                    '<div class="media-upload-row">' +
+                        '<div class="media-upload-controls">' +
+                            '<button type="button" class="btn-secondary media-library-upload-btn file-select-label" data-target="block-' + id + '"><span>' + (t.selectFile || 'Select File') + '</span></button>' +
+                            '<span class="file-name-display"></span>' +
+                            '<span class="autosave-status block-upload-status" data-block-id="' + id + '" aria-live="polite"></span>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="block-text-editor">' +
                     '<textarea name="markdown" placeholder="' + t.reportPlaceholder + '"></textarea>' +
-                    '<div class="block-text-actions">' +
-                        '<button type="button" class="btn-primary btn-save-text-block" data-block-id="' + id + '">' + t.saveText + '</button>' +
+                '</div>' +
+                '<div class="media-order-bar">' +
+                    '<div class="media-order-actions">' +
                         '<span class="autosave-status" data-role="block-save-status"></span>' +
+                        '<button type="button" class="btn-primary btn-save-text-block" data-block-id="' + id + '">' + t.saveText + '</button>' +
                     '</div>' +
                 '</div>' +
             '</div>' +

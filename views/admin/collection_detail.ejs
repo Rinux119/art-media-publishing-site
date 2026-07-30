@@ -177,19 +177,42 @@
                         </div>
                     </div>
                     <div class="block-card-body">
-                        <div class="block-text-editor">
-                            <div class="panel-soft">
-                                <div class="block-title-row" data-block-id="<%= block.id %>">
-                                    <input type="text" id="block-title-<%= block.id %>" class="block-title-input" name="block_title" value="<%= block.title || '' %>" placeholder="<%= __('admin.collectionDetail.documentTitlePlaceholder') %>" maxlength="120" data-block-id="<%= block.id %>">
-                                    <button type="button" class="btn-secondary btn-save-block-title" data-block-id="<%= block.id %>"><%= __('admin.collectionDetail.saveTitle') %></button>
-                                    <span class="autosave-status block-title-status" data-block-id="<%= block.id %>" aria-live="polite"></span>
+                        <div class="media-config-panel">
+                            <div class="media-config-row is-format-enabled">
+                                <div class="media-config-field media-config-field-title">
+                                    <label class="media-config-label" for="block-title-<%= block.id %>"><%= __('admin.collectionDetail.documentTitle') %></label>
+                                    <div class="block-title-row" data-block-id="<%= block.id %>">
+                                        <input type="text" id="block-title-<%= block.id %>" class="block-title-input" name="block_title" value="<%= block.title || '' %>" placeholder="<%= __('admin.collectionDetail.documentTitlePlaceholder') %>" maxlength="120" data-block-id="<%= block.id %>">
+                                        <button type="button" class="btn-secondary btn-save-block-title" data-block-id="<%= block.id %>"><%= __('admin.collectionDetail.saveTitle') %></button>
+                                        <span class="autosave-status block-title-status" data-block-id="<%= block.id %>" aria-live="polite"></span>
+                                    </div>
+                                </div>
+                                <div class="media-config-field media-config-field-format">
+                                    <label class="media-config-label" for="block-media-format-<%= block.id %>"><%= __('admin.collectionDetail.mediaFormat') %></label>
+                                    <div class="block-format-row">
+                                        <select id="block-media-format-<%= block.id %>" class="block-format-select is-disabled" name="block_media_format" data-block-id="<%= block.id %>" disabled>
+                                            <option value="" selected><%= __('admin.collectionDetail.textModeUnavailable') %></option>
+                                        </select>
+                                        <span class="autosave-status block-format-status" data-block-id="<%= block.id %>" aria-live="polite"></span>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="media-config-label"><%= __('admin.collectionDetail.uploadToDescription') %></div>
+                            <div class="media-upload-row">
+                                <div class="media-upload-controls">
+                                    <button type="button" class="btn-secondary media-library-upload-btn file-select-label" data-target="block-<%= block.id %>"><span><%= __('admin.collectionDetail.selectFile') %></span></button>
+                                    <span class="file-name-display"></span>
+                                    <span class="autosave-status block-upload-status" data-block-id="<%= block.id %>" aria-live="polite"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="block-text-editor">
                             <textarea name="markdown" placeholder="<%= __('admin.collectionDetail.reportPlaceholder') %>"><%= block.markdown || '' %></textarea>
-                            <div class="block-text-actions">
-                                <button type="button" class="btn-secondary media-library-upload-btn" data-target="block-<%= block.id %>"><%= __('admin.collectionDetail.uploadToDescription') %></button>
-                                <button type="button" class="btn-primary btn-save-text-block" data-block-id="<%= block.id %>"><%= __('admin.collectionDetail.saveText') %></button>
+                        </div>
+                        <div class="media-order-bar">
+                            <div class="media-order-actions">
                                 <span class="autosave-status" data-role="block-save-status"></span>
+                                <button type="button" class="btn-primary btn-save-text-block" data-block-id="<%= block.id %>"><%= __('admin.collectionDetail.saveText') %></button>
                             </div>
                         </div>
                     </div>
