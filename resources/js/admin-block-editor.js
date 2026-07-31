@@ -208,7 +208,6 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (data && data.success) {
-                if (statusEl) statusEl.textContent = t.draftSaved;
                 var previewEl = card.querySelector('.block-card-title-preview');
                 if (previewEl) previewEl.textContent = title ? ' · ' + title : '';
                 showPageNotice(t.draftSaved);
@@ -244,7 +243,6 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (data && data.success) {
-                if (statusEl) statusEl.textContent = t.draftSaved;
                 showPageNotice(t.draftSaved);
                 document.dispatchEvent(new CustomEvent('draft-changed'));
             } else {

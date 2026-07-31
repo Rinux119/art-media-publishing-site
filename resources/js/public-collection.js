@@ -7,6 +7,11 @@
     const items = rawJson ? JSON.parse(rawJson.textContent || '[]') : [];
     const batchSize = parseInt((loading && loading.dataset.batchSize) || '20', 10) || 20;
     const mediaFormat = (grid && grid.dataset.mediaFormat) || '3:2';
+    // anthology/archiving 子页：固定列数，缩略图较小，一次性加载所有图片，不显示"滑动加载中..."
+    const isAnthologySub = !!(grid && grid.classList.contains('thumb-grid-anthology-sub'));
+    // 1 列和 2 列画幅使用 medium 尺寸图，其余使用默认 thumb
+    var lowColumnFormats = ['1.16:1', '1.37:1', '6x9', '2.25:1', '3:1', '5:4', '8x10'];
+    const useMediumImage = isAnthologySub && lowColumnFormats.indexOf(mediaFormat) !== -1;
     let cursor = 0;
     var formatMap = {
       '3:2': { w: 3, h: 2, landscape: true },
@@ -101,7 +106,7 @@
         return wrap;
       }
       const img = document.createElement('img');
-      img.src = item.mediaUrl;
+      img.src = (useMediumImage && item.mediumUrl) ? item.mediumUrl : item.mediaUrl;
       img.alt = item.original_name || '';
       img.loading = 'lazy';
       markPortraitImage(img);
@@ -239,13 +244,22 @@
 
     appendBatch();
     if (cursor < items.length) {
-      const observer = new IntersectionObserver((entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          appendBatch();
-          if (cursor >= items.length) observer.disconnect();
-        }
-      }, { rootMargin: '200px 0px' });
-      observer.observe(loading);
+      if (isAnthologySub) {
+        // anthology/archiving 子页：固定列数、缩略图较小，一次性加载剩余批次，不使用 IntersectionObserver
+        while (cursor < items.length) appendBatch();
+        if (loading) loading.style.display = 'none';
+      } else {
+        const observer = new IntersectionObserver((entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            appendBatch();
+            if (cursor >= items.length) observer.disconnect();
+          }
+        }, { rootMargin: '200px 0px' });
+        observer.observe(loading);
+      }
+    } else if (isAnthologySub && loading) {
+      // anthology/archiving 子页所有图片已加载完，隐藏 loading
+      loading.style.display = 'none';
     }
 
     function attachThumbHoverVideoBehavior() {

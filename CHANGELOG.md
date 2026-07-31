@@ -6,6 +6,17 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.31.0] - 2026-07-31
+
+### Fixed
+
+- 修复 anthology/archiving 子页在 Half 等 12 列画幅下 `#wall-loading` 元素始终可见、显示「滑动加载中...」的问题：子页固定列数、缩略图较小，改为一次性加载所有图片（`while (cursor < items.length) appendBatch()`），不再使用 IntersectionObserver 懒加载，加载完成后隐藏 loading 元素（`display: none`）
+- 修复后台更换画幅、保存标题成功后配置区布局位移的问题：`saveBlockMediaFormat` 与 `saveBlockTitle` 成功时不再设置 `statusEl.textContent = t.draftSaved`（避免 `.block-format-status` / `.block-title-status` 从空变为有文本导致 flex/grid 布局位移），仅用 `showPageNotice(t.draftSaved)` 在页面顶部弹出通知（与「保存顺序」行为一致）。错误时仍保留 `statusEl` 文本以便定位
+
+### Changed
+
+- anthology/archiving 子页 1 列与 2 列画幅（6x7 / 6x8 / 6x9 / 6x12 / 6x17 / 4x5 / 8x10）的缩略图改用 medium 尺寸图（`item.mediumUrl`）以提升清晰度，其余画幅仍使用默认 thumb 尺寸
+
 ## [2.30.0] - 2026-07-31
 
 ### Added
