@@ -6,6 +6,12 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.29.0] - 2026-07-31
+
+### Fixed
+
+- 修复 anthology/archiving 子页画幅旋转在图片缓存命中时失效的问题：`public-collection.js` 的 `markPortraitImage` 在 `createMediaNode` 内被调用时，`img` 刚 `createElement` 出来、刚设了 `src`，但**还没被 append 到 DOM**。当图片未缓存（首次进入 / 强制刷新）时，`img.complete` 为 false → 走 `else` 挂 `load` 监听器 → load 事件在 img 被 append 后触发 → `closest()` 能找到 wrap → 正常加 `is-rotated`；当图片已缓存（普通刷新）时，浏览器对缓存图片同步把 `img.complete` 与 `naturalWidth` 置为 true → 走 `if` 分支同步调用 `check()` → 但此时 img 还没进 DOM，`img.closest('.media-item')` 返回 null → `if (!wrap) return` 直接退出，**且因为已走 if 分支不再挂 load 监听器** → `is-rotated` 永远加不上。现 `wrap` 为 null 时用 `requestAnimationFrame(check)` 在下一帧重试，覆盖「动态创建 + 缓存命中」「动态创建 + 未缓存」「SSR + 缓存命中」「SSR + 未缓存」四种时序
+
 ## [2.28.0] - 2026-07-30
 
 ### Added

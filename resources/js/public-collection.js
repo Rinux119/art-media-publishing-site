@@ -27,7 +27,12 @@
         var fmt = formatMap[mediaFormat] || formatMap['3:2'];
         var imgIsLandscape = img.naturalWidth / img.naturalHeight >= 1;
         var wrap = img.closest('.media-item, .anthology-entry-thumb');
-        if (!wrap) return;
+        if (!wrap) {
+          // 动态创建的 img 在调用本函数时还未被 append 到 DOM，
+          // 此时 closest() 返回 null。等到下一帧同步 append 完成后再检查。
+          requestAnimationFrame(check);
+          return;
+        }
         if (fmt.landscape && !imgIsLandscape) {
           wrap.classList.add('is-rotated');
         } else if (!fmt.landscape && imgIsLandscape) {
