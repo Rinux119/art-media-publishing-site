@@ -16,9 +16,11 @@
       '1:1': { w: 1, h: 1, landscape: true },
       '1.16:1': { w: 1.16, h: 1, landscape: true },
       '1.37:1': { w: 1.37, h: 1, landscape: true },
+      '6x9': { w: 3, h: 2, landscape: true },
       '2.25:1': { w: 2.25, h: 1, landscape: true },
       '3:1': { w: 3, h: 1, landscape: true },
-      '5:4': { w: 5, h: 4, landscape: true }
+      '5:4': { w: 5, h: 4, landscape: true },
+      '8x10': { w: 5, h: 4, landscape: true }
     };
 
     function markPortraitImage(img) {

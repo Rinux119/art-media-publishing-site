@@ -6,6 +6,22 @@
 - **MINOR**：向后兼容的功能新增
 - **PATCH**：向后兼容的 Bug 修复
 
+## [2.30.0] - 2026-07-31
+
+### Added
+
+- 画幅选择器新增两种画幅：3:2 (6x9) 位于 6x8 与 6x12 之间、5:4 (8x10) 位于 4x5 之下。两者旋转与画格比例逻辑分别复用 3:2 (135) 与 5:4 (4x5)，但缩略图列数分别固定为 2 列与 1 列
+
+### Changed
+
+- anthology/archiving 子页缩略图列数改为按画幅固定，不再随设备宽度变化，核心逻辑是适配标准底片收纳页（Print File 等标准活页）的物理宽度与行数：135=6 列、Half=12 列、X-Pan=3 列、6x4.5=4 列、6x6=3 列、6x7/6x8/6x9/6x12=2 列、6x17/4x5/8x10=1 列
+- 删除响应式 media query 中的 `.thumb-grid-anthology-sub` 列数规则（原 4/3/2/1 列随设备宽度变化）
+- 合集与归档类型的文本区块进入管理后默认收起（`is-collapsed`），与媒体区块行为一致
+
+### Fixed
+
+- 修复固定列数 CSS 选择器未生效的问题：`#wall-grid` 元素自身就是 `.thumb-grid-anthology-sub`，但原选择器 `#wall-grid[data-media-format] .thumb-grid-anthology-sub`（后代选择器）要求 `.thumb-grid-anthology-sub` 是 `#wall-grid` 的后代元素，导致不匹配。改为同一元素选择器 `.thumb-grid-anthology-sub[data-media-format]` 正确匹配元素本身
+
 ## [2.29.0] - 2026-07-31
 
 ### Fixed
